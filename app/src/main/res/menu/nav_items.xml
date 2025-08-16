@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/watchlist"
+        android:title="@string/my_list"
+        android:icon="@android:drawable/ic_input_get">
+    </item>
+    <item
+        android:id="@+id/odders"
+        android:title="@string/odders"
+        android:icon="@drawable/baseline_add_shopping_cart_24">
+    </item>
+    <item
+        android:id="@+id/portfolio"
+        android:title="@string/portfolio"
+        android:icon="?attr/actionModePasteDrawable">
+    </item>
+    <item
+        android:id="@+id/my_acount"
+        android:title="@string/my_acount"
+        android:icon="@drawable/baseline_account_circle_24">
+    </item>
+</menu>

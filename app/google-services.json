@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "450222383572",
+    "project_id": "fir-treading",
+    "storage_bucket": "fir-treading.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:450222383572:android:8ff8ab46b62b49fdf6f641",
+        "android_client_info": {
+          "package_name": "com.example.bottonnavigation_and_recyclerview_implement_homepage"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBLiRKeCTgGXfR3ilVFGapJNbNcGe-bO0o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

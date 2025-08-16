@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".fragment_ButtomNavigation.watchlist"
+    android:id="@+id/watchlist">
+
+   <androidx.constraintlayout.widget.ConstraintLayout
+       android:layout_width="match_parent"
+       android:layout_height="80dp"
+      android:orientation="horizontal"
+       android:background="@color/violet">
+
+      <TextView
+          android:id="@+id/textView2"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_marginStart="15dp"
+          android:text="Watch List"
+          android:textColor="@color/white"
+          android:textSize="28sp"
+          android:textStyle="bold"
+          app:layout_constraintBottom_toBottomOf="parent"
+          app:layout_constraintStart_toStartOf="parent"
+          app:layout_constraintTop_toTopOf="parent" />
+
+      <ImageView
+          android:id="@+id/shorted_img_btn"
+          android:layout_width="40dp"
+          android:layout_height="35dp"
+          android:layout_marginStart="20dp"
+          android:backgroundTint="#3C5F26A1"
+          android:src="@drawable/dropdown_img"
+          app:layout_constraintBottom_toBottomOf="parent"
+          app:layout_constraintStart_toEndOf="@+id/textView2"
+          app:layout_constraintTop_toTopOf="parent" />
+
+      <ImageView
+          android:id="@+id/search_img_btn"
+          android:layout_width="50dp"
+          android:layout_height="40dp"
+          android:layout_marginEnd="15dp"
+          android:backgroundTint="#3C5F26A1"
+          android:drawableTintMode="multiply"
+          android:src="@drawable/add_img_white"
+          app:layout_constraintBottom_toBottomOf="parent"
+          app:layout_constraintEnd_toEndOf="parent"
+          app:layout_constraintTop_toTopOf="parent" />
+   </androidx.constraintlayout.widget.ConstraintLayout>
+
+   <androidx.recyclerview.widget.RecyclerView
+       android:layout_width="match_parent"
+       android:layout_height="match_parent"
+       android:id="@+id/recicle_watchlist"
+       android:layout_marginTop="85dp"
+       android:layout_marginBottom="60dp"
+       app:layout_constraintTop_toBottomOf="@+id/linearLayout"
+       app:layout_constraintBottom_toBottomOf="parent"
+       android:scrollbars="vertical"
+       android:orientation="vertical"/>
+
+
+
+
+</FrameLayout>

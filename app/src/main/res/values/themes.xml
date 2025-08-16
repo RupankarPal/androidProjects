@@ -1,0 +1,9 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Base.Theme.Bottonnavigation_and_recyclerview_implement_homepage" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Customize your light theme here. -->
+        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+    </style>
+
+    <style name="Theme.Bottonnavigation_and_recyclerview_implement_homepage" parent="Base.Theme.Bottonnavigation_and_recyclerview_implement_homepage" />
+</resources>
