@@ -76,16 +76,16 @@ public class My_acount extends Fragment {
 
     }
 
-    int fund;
+    Double fund;
     //context
     Activity context;
 
     RewardedAd rewardedAd;
     // add lode function code
-    private void lodeRewardAdd(){
+    private void lodeRewardAdd(Activity context){
         AdRequest adRequest = new AdRequest.Builder().build();
 
-        RewardedAd.load(context, "ca-app-pub-3940256099942544/5224354917", adRequest, new RewardedAdLoadCallback() {
+        RewardedAd.load(context, "ca-app-pub-5307098553494261/5464605667", adRequest, new RewardedAdLoadCallback() {
             @Override
             public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
                 rewardedAd = null;
@@ -103,7 +103,7 @@ public class My_acount extends Fragment {
                              Bundle savedInstanceState) {
 
         context = (MainActivity)getActivity();
-
+        lodeRewardAdd(context);
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_my_acount, container, false);
 
@@ -122,7 +122,6 @@ public class My_acount extends Fragment {
 
         // fund code
         TextView fund_txt = view.findViewById(R.id.fund_txt);
-        fund = Integer.parseInt(fund_txt.getText().toString().trim());
         // add fund code
         Button addFundBtn = view.findViewById(R.id.add_fund_btn);
         addFundBtn.setOnClickListener(new View.OnClickListener() {
@@ -136,12 +135,12 @@ public class My_acount extends Fragment {
                                 fund_txt.setText(String.valueOf(fund));
                                 Toast.makeText(context, "+25000 fund added", Toast.LENGTH_SHORT).show();
                                 // Reload ad for next time
-                               lodeRewardAdd();
+                               lodeRewardAdd(context);
                             });
                         } else {
                             // Ad not ready
                             Toast.makeText(context, "Ad not loaded yet. Please wait...", Toast.LENGTH_SHORT).show();
-                            lodeRewardAdd();
+                            lodeRewardAdd(context);
                         }
                     } catch (Exception e) {
                         e.printStackTrace();

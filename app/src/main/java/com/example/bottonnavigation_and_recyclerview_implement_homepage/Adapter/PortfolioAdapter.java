@@ -58,7 +58,7 @@ public class PortfolioAdapter extends RecyclerView.Adapter<PortfolioAdapter.View
 
             stockName = itemView.findViewById(R.id.stock_name_txt);
             stockPrice = itemView.findViewById(R.id.limit_price_txt);
-            stockPercentile = itemView.findViewById(R.id.stock_percentage_txt);
+            stockPercentile = itemView.findViewById(R.id.percentile_txt);
             stockPerchesingPrice = itemView.findViewById(R.id.purchasing_price_txt);
             quantity = itemView.findViewById(R.id.Quentity_txt);
             investedAmount = itemView.findViewById(R.id.invested_amount_txt);

@@ -159,9 +159,9 @@ public class BuySellOrderWindow extends AppCompatActivity {
         });
 
         //veriable define
-        stockName = findViewById(R.id.stock_name_txt);
+        stockName = findViewById(R.id.stocks_Name_txt);
         stockPrise = findViewById(R.id.limit_price_txt);
-        stockChangeInPercent = findViewById(R.id.stock_percentage_txt);
+        stockChangeInPercent = findViewById(R.id.percentile_txt);
         targate_txt = findViewById(R.id.targate_txt);
         sl_txt = findViewById(R.id.sl_txt);
         total_cost_txt = findViewById(R.id.total_cost_txt);
@@ -179,6 +179,12 @@ public class BuySellOrderWindow extends AppCompatActivity {
         Tedt = findViewById(R.id.targate_edt);
         sledt = findViewById(R.id.sl_edt);
 
+        Intent intent = getIntent();
+        if (intent != null){
+            stockName.setText(intent.getStringExtra("Stocks_name"));
+            stockPrise.setText(intent.getStringExtra("SPrice"));
+            stockChangeInPercent.setText("(" + intent.getStringExtra("SPercentage") + "%)");
+        }
         //back button
         back_btn.setOnClickListener(new View.OnClickListener() {
             @Override
