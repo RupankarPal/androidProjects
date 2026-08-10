@@ -7,75 +7,30 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
-import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.bottonnavigation_and_recyclerview_implement_homepage.BuySellOrderWindow;
+import  com.example.bottonnavigation_and_recyclerview_implement_homepage.ProfitLossActivity;
+import com.example.bottonnavigation_and_recyclerview_implement_homepage.DatabaseClasses.FundDatabase;
 import com.example.bottonnavigation_and_recyclerview_implement_homepage.MainActivity;
 import com.example.bottonnavigation_and_recyclerview_implement_homepage.R;
-import com.example.bottonnavigation_and_recyclerview_implement_homepage.loginPage;
+import com.example.bottonnavigation_and_recyclerview_implement_homepage.validation.loginPage;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.LoadAdError;
 import com.google.android.gms.ads.MobileAds;
 import com.google.android.gms.ads.rewarded.RewardedAd;
 import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback;
 
+import java.util.Calendar;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link My_acount#newInstance} factory method to
- * create an instance of this fragment.
- */
 public class My_acount extends Fragment {
 
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
-
-    public My_acount() {
-        // Required empty public constructor
-    }
-
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment My_acount.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static My_acount newInstance(String param1, String param2) {
-        My_acount fragment = new My_acount();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
-
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
-
-    }
-
+    String strCurrency;
     Double fund;
     //context
     Activity context;
@@ -109,7 +64,83 @@ public class My_acount extends Fragment {
 
         MobileAds.initialize(context,initializationStatus -> {});   //initialise addMob
 
-        // Logout code
+        //date and time featching
+        Calendar calendar = Calendar.getInstance();
+        int year = calendar.get(Calendar.YEAR);
+        int Month = calendar.get(Calendar.MONTH);
+        int date = calendar.get(Calendar.DATE);
+        String dateStr = date + "-" + Month + "-" + year;
+
+        // fund code
+        TextView fund_txt = view.findViewById(R.id.fund_txt);
+        FundDatabase fdb = new FundDatabase(context);
+        fund = fdb.getBalance();
+        fund_txt.setText(String.valueOf(fund));
+
+        // currency code
+        ImageView currency = view.findViewById(R.id.currency_img);
+        currency.setOnClickListener(v -> {
+            currency.setImageResource(R.drawable.doller_logo);
+            strCurrency = "USD";
+            Toast.makeText(context, "Your currency is change in to USD", Toast.LENGTH_SHORT).show();
+        });
+
+        // add fund code
+        Button addFundBtn = view.findViewById(R.id.add_fund_btn);
+        addFundBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    if (rewardedAd != null) {
+                        rewardedAd.show(context, rewardItem -> {
+                            // Reward given after watching video
+                            fund = fund + 25000;
+                            fdb.addFund(strCurrency, fund, dateStr);
+                            fund_txt.setText(String.valueOf(fund));
+                            Toast.makeText(context, "+25000 fund added (via Ad)", Toast.LENGTH_SHORT).show();
+
+                            // Reload ad
+                            lodeRewardAdd(context);
+                        });
+                    } else {
+                        // Ad not ready → add fund after 10 sec
+                        Toast.makeText(context, "Ad not loaded. Adding fund in 10 sec...", Toast.LENGTH_SHORT).show();
+
+                        new android.os.Handler().postDelayed(() -> {
+                            fund = fund + 25000;
+                            fdb.addFund(strCurrency, fund, dateStr);
+                            fund_txt.setText(String.valueOf(fund));
+                            Toast.makeText(context, "+25000 fund added (fallback)", Toast.LENGTH_SHORT).show();
+                        }, 10000); // 10 seconds delay
+
+                        lodeRewardAdd(context);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Toast.makeText(context, "Error showing ad: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    // Also fallback after 10 sec in case of exception
+                    new android.os.Handler().postDelayed(() -> {
+                        fund = fund + 25000;
+                        fdb.addFund(strCurrency, fund, dateStr);
+                        fund_txt.setText(String.valueOf(fund));
+                        Toast.makeText(context, "+25000 fund added (exception fallback)", Toast.LENGTH_SHORT).show();
+                    }, 10000);
+                }
+            }
+        });
+
+
+        // history and report code
+        Button history_report_btn = view.findViewById(R.id.history_report_btn);
+        history_report_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(context, ProfitLossActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        // Logout button code
         Button LogOut_btn = view.findViewById(R.id.LogOut_btn);
         LogOut_btn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -119,43 +150,80 @@ public class My_acount extends Fragment {
             }
         });
 
+        // Reset Data button code
+        Button resetBtn = view.findViewById(R.id.reset_data_btn);
+        if (resetBtn != null) {
+            resetBtn.setOnClickListener(v -> {
+                androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(context);
+                builder.setTitle("Reset All Data?");
+                builder.setMessage("This will permanently clear all your portfolio, orders, and funds. This action cannot be undone.");
+                builder.setPositiveButton("Reset", (dialog, which) -> {
+                    // Clear all databases
+                    new Thread(() -> {
+                        com.example.bottonnavigation_and_recyclerview_implement_homepage.DatabaseClasses.OrdersDatabaseHelper odb = new com.example.bottonnavigation_and_recyclerview_implement_homepage.DatabaseClasses.OrdersDatabaseHelper(context);
+                        odb.clearAllOrders();
+                        odb.close();
 
-        // fund code
-        TextView fund_txt = view.findViewById(R.id.fund_txt);
-        // add fund code
-        Button addFundBtn = view.findViewById(R.id.add_fund_btn);
-        addFundBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                    try {
-                        if (rewardedAd != null) {
-                            rewardedAd.show(context, rewardItem -> {
-                                // Reward the user after watching video
-                                fund = fund + 25000;
-                                fund_txt.setText(String.valueOf(fund));
-                                Toast.makeText(context, "+25000 fund added", Toast.LENGTH_SHORT).show();
-                                // Reload ad for next time
-                               lodeRewardAdd(context);
+                        FundDatabase fdb_internal = new FundDatabase(context);
+                        fdb_internal.getWritableDatabase().delete("Funds", null, null);
+                        fdb_internal.getWritableDatabase().delete("StockTransactions", null, null);
+                        fdb_internal.getWritableDatabase().delete("TradeHistory", null, null);
+                        fdb_internal.close();
+
+                        // Reset Premium Status
+                        com.example.bottonnavigation_and_recyclerview_implement_homepage.SubscriptionManager.setPremium(context, false);
+
+                        if (getActivity() != null) {
+                            getActivity().runOnUiThread(() -> {
+                                fund_txt.setText("0.0");
+                                fund = 0.0;
+                                refreshPremiumStatus();
+                                Toast.makeText(context, "All data reset successfully", Toast.LENGTH_LONG).show();
                             });
-                        } else {
-                            // Ad not ready
-                            Toast.makeText(context, "Ad not loaded yet. Please wait...", Toast.LENGTH_SHORT).show();
-                            lodeRewardAdd(context);
                         }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        Toast.makeText(context, "Error showing ad: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                    }
+                    }).start();
+                });
+                builder.setNegativeButton("Cancel", null);
+                builder.show();
+            });
+        }
 
-            }
-        });
+        // Premium button code
+        Button premiumBtn = view.findViewById(R.id.premium_btn);
+        if (premiumBtn != null) {
+            premiumBtn.setOnClickListener(v -> {
+                if (com.example.bottonnavigation_and_recyclerview_implement_homepage.SubscriptionManager.isPremium(context)) {
+                    Toast.makeText(context, "You are already a Premium user!", Toast.LENGTH_SHORT).show();
+                } else {
+                    com.example.bottonnavigation_and_recyclerview_implement_homepage.SubscriptionManager.startSubscriptionPayment(getActivity());
+                }
+            });
+        }
 
+        refreshPremiumStatus(view);
 
         return view;
     }
 
-    private  Runnable runnable;
-    private Handler handler = new Handler();
+    public void refreshPremiumStatus() {
+        if (getView() != null) {
+            refreshPremiumStatus(getView());
+        }
+    }
+
+    private void refreshPremiumStatus(View view) {
+        TextView statusTxt = view.findViewById(R.id.premium_status_txt);
+        if (statusTxt != null) {
+            boolean isPremium = com.example.bottonnavigation_and_recyclerview_implement_homepage.SubscriptionManager.isPremium(getContext());
+            statusTxt.setText(isPremium ? "Status: PREMIUM" : "Status: Free");
+            statusTxt.setTextColor(isPremium ? getResources().getColor(R.color.violet, null) : android.graphics.Color.BLACK);
+            
+            Button premiumBtn = view.findViewById(R.id.premium_btn);
+            if (premiumBtn != null) {
+                premiumBtn.setText(isPremium ? "Active" : "Get Premium");
+            }
+        }
+    }
 
 
 

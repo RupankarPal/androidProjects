@@ -1,7 +1,6 @@
 package com.example.bottonnavigation_and_recyclerview_implement_homepage.Adapter;
 
 import android.content.Context;
-import android.content.Intent;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,7 +11,9 @@ import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.bottonnavigation_and_recyclerview_implement_homepage.BuySellOrderWindow;
+import com.example.bottonnavigation_and_recyclerview_implement_homepage.ChartActivity;
+import android.content.Intent;
+import androidx.appcompat.app.AppCompatActivity;
 import com.example.bottonnavigation_and_recyclerview_implement_homepage.R;
 import com.example.bottonnavigation_and_recyclerview_implement_homepage.Model.stocks_row_Model;
 
@@ -20,45 +21,12 @@ import java.util.ArrayList;
 
 public class Recyclear_stacks_row_Adapter_watchlist extends RecyclerView.Adapter<Recyclear_stacks_row_Adapter_watchlist.ViewHolder> {
 
-    Context context;
-    ArrayList<stocks_row_Model> arr_stocks_row;
+    private final Context context;
+    private final ArrayList<stocks_row_Model> arr_stocks_row;
 
-    // Constructor
     public Recyclear_stacks_row_Adapter_watchlist(ArrayList<stocks_row_Model> arr_stocks_row, Context context) {
         this.context = context;
         this.arr_stocks_row = arr_stocks_row;
-    }
-
-    // Method to update a single item
-    public void updateItem(stocks_row_Model stock) {
-        int index = -1;
-        // Find the position of the stock in your list
-        for (int i = 0; i < arr_stocks_row.size(); i++) {
-            if (arr_stocks_row.get(i).getStocks_name().equals(stock.getStocks_name())) {
-                index = i;
-                break;
-            }
-        }
-        // If the stock is found, update it and notify the adapter
-        if (index != -1) {
-            arr_stocks_row.set(index, stock);
-            notifyItemChanged(index);
-        }
-    }
-
-    // Method to add a single item
-    public void addItem(stocks_row_Model stock) {
-        arr_stocks_row.add(stock);
-        notifyItemInserted(arr_stocks_row.size() - 1);
-    }
-
-    // Method to clear all items
-    public void clearItems() {
-        int size = arr_stocks_row.size();
-        if (size > 0) {
-            arr_stocks_row.clear();
-            notifyItemRangeRemoved(0, size);
-        }
     }
 
     @NonNull
@@ -70,22 +38,31 @@ public class Recyclear_stacks_row_Adapter_watchlist extends RecyclerView.Adapter
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        // Check if the position is valid before accessing the list
         if (position >= 0 && position < arr_stocks_row.size()) {
-            stocks_row_Model stocks_row_model = arr_stocks_row.get(position);
-            Log.d("Adapter", "Binding position: " + position + " for stock: " + stocks_row_model.getStocks_name());
+            stocks_row_Model model = arr_stocks_row.get(position);
 
-            holder.stocks_Name_txt.setText(stocks_row_model.getStocks_name());
-            holder.stock_price_txt.setText(stocks_row_model.getStocks_price());
-            holder.percentile_txt.setText("(" + stocks_row_model.getPercentile() + "%)");
-            holder.todayChange_txt.setText(stocks_row_model.getTodayChange());
+            holder.stocks_Name_txt.setText(model.getStocks_name());
+            holder.stock_price_txt.setText(model.getStocks_price());
+            holder.percentile_txt.setText(String.format("(%s%%)", model.getPercentile()));
+            holder.todayChange_txt.setText(model.getTodayChange());
+
+            // Color logic: Red for negative change, Green for positive
+            double changePercent = parseDoubleSafe(model.getPercentile());
+            int color = context.getResources().getColor(R.color.black, null);
+            
+            if (changePercent > 0) {
+                color = context.getResources().getColor(R.color.Green, null);
+            } else if (changePercent < 0) {
+                color = context.getResources().getColor(R.color.Red, null);
+            }
+            
+            holder.stock_price_txt.setTextColor(color);
+            holder.percentile_txt.setTextColor(color);
+            holder.todayChange_txt.setTextColor(color);
 
             holder.cardView.setOnClickListener(v -> {
-                Intent intent = new Intent(context, BuySellOrderWindow.class);
-                intent.putExtra("Stocks_name", stocks_row_model.getStocks_name());
-                intent.putExtra("SPrice", stocks_row_model.getStocks_price());
-                intent.putExtra("SPercentage", stocks_row_model.getPercentile());
-
+                Intent intent = new Intent(context, ChartActivity.class);
+                intent.putExtra("symbol", model.getStocks_name());
                 context.startActivity(intent);
             });
         }
@@ -96,8 +73,7 @@ public class Recyclear_stacks_row_Adapter_watchlist extends RecyclerView.Adapter
         return arr_stocks_row.size();
     }
 
-    // ViewHolder class
-    public class ViewHolder extends RecyclerView.ViewHolder {
+    public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView stocks_Name_txt, stock_price_txt, percentile_txt, todayChange_txt;
         CardView cardView;
 
@@ -108,6 +84,17 @@ public class Recyclear_stacks_row_Adapter_watchlist extends RecyclerView.Adapter
             percentile_txt = itemView.findViewById(R.id.percentile_txt);
             todayChange_txt = itemView.findViewById(R.id.todayChange_txt);
             cardView = itemView.findViewById(R.id.cardView);
+        }
+    }
+
+    private double parseDoubleSafe(String str) {
+        if (str == null || str.isEmpty() || str.equals("--")) return 0.0;
+        try {
+            // CRITICAL: Preserve the negative sign!
+            String clean = str.replace("₹", "").replace("%", "").replace(",", "").replace("+", "").trim();
+            return Double.parseDouble(clean);
+        } catch (Exception e) {
+            return 0.0;
         }
     }
 }

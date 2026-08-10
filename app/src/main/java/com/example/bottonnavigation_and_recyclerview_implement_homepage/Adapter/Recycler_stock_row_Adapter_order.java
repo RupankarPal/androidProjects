@@ -11,10 +11,12 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.bottonnavigation_and_recyclerview_implement_homepage.Model.Order_model;
+import com.example.bottonnavigation_and_recyclerview_implement_homepage.OrderOptionsDialogFragment;
 import com.example.bottonnavigation_and_recyclerview_implement_homepage.R;
+import androidx.appcompat.app.AppCompatActivity;
 
 import java.util.ArrayList;
-import java.util.Calendar;
+
 
 public class Recycler_stock_row_Adapter_order extends RecyclerView.Adapter<Recycler_stock_row_Adapter_order.ViewHolder> {
 
@@ -38,15 +40,7 @@ public class Recycler_stock_row_Adapter_order extends RecyclerView.Adapter<Recyc
         Order_model temp_model =  orderInfo_arr.get(position);
         double sl_price = temp_model.getSl_price();
         double targate_price = temp_model.getTargate_price();
-        Calendar now = Calendar.getInstance();
-        int hour = now.get(Calendar.HOUR_OF_DAY);
-        int min = now.get(Calendar.MINUTE);
-        String amPM = "am";
-        if (hour>12){
-            hour = hour - 12;
-            amPM = "pm";
-        }
-
+        
         holder.sl_tick_img.setVisibility(View.GONE);
         holder.targate_tick_img.setVisibility(View.GONE);
 
@@ -54,12 +48,19 @@ public class Recycler_stock_row_Adapter_order extends RecyclerView.Adapter<Recyc
         holder.orderType.setText(temp_model.getOrder_type());
         holder.targatePrice.setText(String.valueOf(temp_model.getTargate_price()));
         holder.slPrice.setText(String.valueOf(temp_model.getSl_price()));
-        holder.limitPrice.setText(String.valueOf(temp_model.getOrder_prise()));
+        
+        if (temp_model.getOrder_prise() == 0) {
+            holder.limitPrice.setText("Market");
+        } else {
+            holder.limitPrice.setText(String.valueOf(temp_model.getOrder_prise()));
+        }
+        
         holder.executedQuantity.setText(String.valueOf(temp_model.getExicuted_quantity()));
         holder.bidQuantity.setText(String.valueOf(temp_model.getStock_quantity()));
-        holder.time.setText(hour+":"+min+amPM);
+        holder.time.setText(temp_model.getTime());
 
         if (sl_price==0||targate_price!=0){     // targate hit
+
             holder.targate_tick_img.setVisibility(View.VISIBLE);
         }
 
@@ -67,6 +68,17 @@ public class Recycler_stock_row_Adapter_order extends RecyclerView.Adapter<Recyc
             holder.sl_tick_img.setVisibility(View.GONE);
         }
 
+        // Only allow cancel/modify for OPEN orders
+        if (temp_model.getExicuted_quantity() < temp_model.getStock_quantity()) {
+            holder.itemView.setOnClickListener(v -> {
+                if (context instanceof AppCompatActivity) {
+                    OrderOptionsDialogFragment optionsDialog = OrderOptionsDialogFragment.newInstance(temp_model);
+                    optionsDialog.show(((AppCompatActivity) context).getSupportFragmentManager(), "OrderOptionsDialog");
+                }
+            });
+        } else {
+            holder.itemView.setOnClickListener(null);
+        }
     }
 
     @Override

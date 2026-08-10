@@ -9,7 +9,7 @@
     android:background="@color/violet"
     android:gravity="center"
     android:orientation="vertical"
-    tools:context=".loginPage">
+    tools:context=".validation.loginPage">
 
     <ImageView
         android:id="@+id/imageView2"
@@ -72,7 +72,8 @@
                 android:layout_marginTop="35dp"
                 android:background="@drawable/login_layout"
                 android:drawableLeft="@drawable/baseline_account_circle_24"
-                android:hint="     Enter Your Username"
+                android:hint="     Enter Your Email"
+                android:inputType="textEmailAddress"
                 android:paddingStart="8dp"
                 android:textColor="@color/black"
                 android:textColorHighlight="@color/cardview_dark_background" />

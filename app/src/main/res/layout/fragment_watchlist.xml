@@ -51,16 +51,77 @@
           app:layout_constraintTop_toTopOf="parent" />
    </androidx.constraintlayout.widget.ConstraintLayout>
 
+   <LinearLayout
+       android:id="@+id/category_bar"
+       android:layout_width="match_parent"
+       android:layout_height="50dp"
+       android:layout_marginTop="80dp"
+       android:background="@color/white"
+       android:elevation="2dp"
+       android:orientation="horizontal"
+       android:padding="5dp">
+
+      <HorizontalScrollView
+          android:layout_width="match_parent"
+          android:layout_height="match_parent"
+          android:scrollbars="none">
+
+         <LinearLayout
+             android:layout_width="wrap_content"
+             android:layout_height="match_parent"
+             android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btn_indian"
+                style="?android:attr/borderlessButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Indian"
+                android:textAllCaps="false"
+                android:textColor="@color/violet"
+                android:textStyle="bold" />
+
+            <Button
+                android:id="@+id/btn_us"
+                style="?android:attr/borderlessButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="US Stocks"
+                android:textAllCaps="false"
+                android:textColor="@color/black" />
+
+            <Button
+                android:id="@+id/btn_crypto"
+                style="?android:attr/borderlessButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Crypto"
+                android:textAllCaps="false"
+                android:textColor="@color/black" />
+
+            <Button
+                android:id="@+id/btn_index"
+                style="?android:attr/borderlessButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Index"
+                android:textAllCaps="false"
+                android:textColor="@color/black" />
+
+         </LinearLayout>
+      </HorizontalScrollView>
+   </LinearLayout>
+
+
    <androidx.recyclerview.widget.RecyclerView
+       android:id="@+id/recicle_watchlist"
        android:layout_width="match_parent"
        android:layout_height="match_parent"
-       android:id="@+id/recicle_watchlist"
-       android:layout_marginTop="85dp"
+       android:layout_marginTop="130dp"
        android:layout_marginBottom="60dp"
-       app:layout_constraintTop_toBottomOf="@+id/linearLayout"
-       app:layout_constraintBottom_toBottomOf="parent"
-       android:scrollbars="vertical"
-       android:orientation="vertical"/>
+       android:orientation="vertical"
+       android:scrollbars="vertical" />
+
 
 
 

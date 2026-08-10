@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script src="file:///android_asset/lightweight-charts.js"></script>
+    <style>
+        body { margin: 0; padding: 0; overflow: hidden; background-color: #ffffff; }
+        #chart { width: 100vw; height: 100vh; }
+    </style>
+</head>
+<body>
+    <div id="loading" style="position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); font-family:sans-serif; color:#888;">Loading Chart...</div>
+    <div id="chart"></div>
+    <script>
+        console.log("Chart script initializing...");
+        let chart = null;
+        let candleSeries = null;
+
+        function initChart() {
+            if (typeof LightweightCharts === 'undefined') {
+                console.error("LightweightCharts is not defined! Retrying in 200ms...");
+                setTimeout(initChart, 200);
+                return;
+            }
+
+            console.log("LightweightCharts loaded, creating chart...");
+            document.getElementById('loading').style.display = 'none';
+
+            const chartContainer = document.getElementById('chart');
+            chart = LightweightCharts.createChart(chartContainer, {
+                layout: {
+                    backgroundColor: '#ffffff',
+                    textColor: '#333'
+                },
+                grid: {
+                    vertLines: { color: '#f0f0f0' },
+                    horzLines: { color: '#f0f0f0' }
+                },
+                crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+                rightPriceScale: { borderColor: '#f0f0f0' },
+                timeScale: {
+                    borderColor: '#f0f0f0',
+                    timeVisible: true,
+                    secondsVisible: false,
+                    fixLeftEdge: true,
+                },
+            });
+
+            candleSeries = chart.addCandlestickSeries({
+                upColor: '#4caf50', downColor: '#f44336', borderVisible: false,
+                wickUpColor: '#4caf50', wickDownColor: '#f44336',
+            });
+            console.log("Chart created successfully.");
+        }
+
+        // Delay start slightly to ensure DOM is ready
+        setTimeout(initChart, 100);
+
+        window.updateData = function(dataJson) {
+            console.log("updateData called");
+            if (!candleSeries) {
+                console.warn("candleSeries not ready, queuing update...");
+                setTimeout(() => window.updateData(dataJson), 500);
+                return;
+            }
+            try {
+                const data = JSON.parse(dataJson);
+                if (data && data.length > 0) {
+                    candleSeries.setData(data);
+                    chart.timeScale().fitContent();
+                    console.log("Data set successfully. Count: " + data.length);
+                }
+            } catch (e) {
+                console.error("Chart Update Error: " + e);
+            }
+        };
+
+        // Resize handler
+        window.addEventListener('resize', () => {
+            if (chart) chart.resize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>

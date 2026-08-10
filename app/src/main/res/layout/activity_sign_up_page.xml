@@ -9,7 +9,7 @@
     android:background="#9015C5"
     android:orientation="vertical"
     android:gravity="center"
-    tools:context=".SignUp_Page">
+    tools:context=".validation.SignUp_PageActivity">
 
     <TextView
         android:layout_width="wrap_content"
@@ -62,7 +62,8 @@
                 android:layout_marginTop="25dp"
                 android:background="@drawable/login_layout"
                 android:drawableLeft="@drawable/baseline_account_circle_24"
-                android:hint="     Enter Your Name"
+                android:hint="     Enter Your Email"
+                android:inputType="textEmailAddress"
                 android:paddingStart="8dp"
                 android:textColor="@color/black"
                 android:textColorHighlight="@color/cardview_dark_background" />

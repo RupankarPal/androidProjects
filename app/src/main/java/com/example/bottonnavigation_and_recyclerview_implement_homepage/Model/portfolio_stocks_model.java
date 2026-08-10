@@ -1,6 +1,8 @@
 package com.example.bottonnavigation_and_recyclerview_implement_homepage.Model;
 
-public class portfolio_stocks_model {
+import java.io.Serializable;
+
+public class portfolio_stocks_model implements Serializable {
 
     private String stocks_name;
     private String stocks_price;
@@ -9,9 +11,10 @@ public class portfolio_stocks_model {
     private String stocks_quantity;
     private String invest_amount;
     private String pl_amount;
+    private String daily_change;
 
     public portfolio_stocks_model(String stocks_name, String stocks_price, String percentage_change,
-                                  String percheasing_price, String stocks_quantity, String invest_amount, String pl_amount) {
+                                  String percheasing_price, String stocks_quantity, String invest_amount, String pl_amount, String daily_change) {
 
         this.stocks_name = stocks_name;
         this.stocks_price = stocks_price;
@@ -20,7 +23,13 @@ public class portfolio_stocks_model {
         this.stocks_quantity = stocks_quantity;
         this.invest_amount = invest_amount;
         this.pl_amount = pl_amount;
+        this.daily_change = daily_change;
     }
+
+    public String getDaily_change() {
+        return daily_change;
+    }
+
 
     public String getStocks_name() {
         return stocks_name;

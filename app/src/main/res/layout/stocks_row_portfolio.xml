@@ -1,135 +1,119 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    app:cardElevation="0dp"
+    app:cardCornerRadius="0dp"
+    android:background="@color/white">
 
-    <androidx.cardview.widget.CardView
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:cardElevation="5dp"
-        app:cardCornerRadius="0dp">
+        android:layout_height="wrap_content"
+        android:padding="16dp">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
+        <!-- Row 1: Name and P&L -->
+        <TextView
+            android:id="@+id/stock_name_txt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="GOLDBEES"
+            android:textColor="@color/black"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/PL_txt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="-393.36 (-2.48%)"
+            android:textColor="@color/Red"
+            android:textSize="16sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- Row 2: Invested and Avg -->
+        <TextView
+            android:id="@+id/lbl_invested_val"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Invested "
+            android:textSize="14sp"
+            android:textColor="#888888"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/stock_name_txt" />
+
+        <TextView
+            android:id="@+id/invested_amount_txt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="15,886.20"
+            android:textSize="14sp"
+            android:textColor="#555555"
+            app:layout_constraintStart_toEndOf="@id/lbl_invested_val"
+            app:layout_constraintTop_toTopOf="@id/lbl_invested_val" />
+
+        <TextView
+            android:id="@+id/purchasing_price_txt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="120.35 Avg"
+            android:textSize="14sp"
+            android:textColor="#555555"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/lbl_invested_val" />
+
+        <!-- Row 3: Qty and LTP -->
+        <TextView
+            android:id="@+id/lbl_qty"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Qty "
+            android:textSize="14sp"
+            android:textColor="#888888"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/lbl_invested_val" />
+
+        <TextView
+            android:id="@+id/Quentity_txt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="132"
+            android:textSize="14sp"
+            android:textColor="#555555"
+            app:layout_constraintStart_toEndOf="@id/lbl_qty"
+            app:layout_constraintTop_toTopOf="@id/lbl_qty" />
+
+        <TextView
+            android:id="@+id/share_price_txt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="117.37"
+            android:textSize="14sp"
+            android:textColor="@color/Green"
+            app:layout_constraintEnd_toStartOf="@id/percentile_txt"
+            app:layout_constraintTop_toTopOf="@id/lbl_qty" />
+
+        <TextView
+            android:id="@+id/percentile_txt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=" (+0.45%) LTP"
+            android:textSize="14sp"
+            android:textColor="@color/Green"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/lbl_qty" />
+
+        <View
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="1dp"
+            android:background="#F0F0F0"
+            android:layout_marginTop="16dp"
+            app:layout_constraintTop_toBottomOf="@id/lbl_qty" />
 
-            <TextView
-                android:id="@+id/stock_name_txt"
-                android:layout_width="130dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
-                android:layout_marginTop="10dp"
-                android:text="Stock_Name"
-                android:textColor="@color/black"
-                android:textSize="20sp"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <TextView
-                android:id="@+id/Quentity_txt"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
-                android:text="10"
-                android:textSize="18sp"
-                android:textColor="@color/black"
-                app:layout_constraintStart_toEndOf="@+id/textView11"
-                app:layout_constraintTop_toBottomOf="@+id/stock_name_txt" />
-
-            <TextView
-                android:id="@+id/textView11"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
-                android:layout_marginTop="5dp"
-                android:text="Q."
-                android:textSize="18sp"
-                android:textColor="#686868"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/stock_name_txt" />
-
-            <TextView
-                android:id="@+id/share_price_txt"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:layout_marginEnd="5dp"
-                android:text="1000"
-                android:textColor="@color/black"
-                android:textSize="20sp"
-                app:layout_constraintEnd_toStartOf="@+id/percentile_txt"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <TextView
-                android:id="@+id/percentile_txt"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:layout_marginEnd="10dp"
-                android:text="(8%)"
-                android:textSize="18sp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <TextView
-                android:id="@+id/PL_txt"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
-                android:layout_marginEnd="10dp"
-                android:text="-100"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/percentile_txt" />
-
-            <TextView
-                android:id="@+id/invested_amount_txt"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
-                android:layout_marginTop="5dp"
-                android:text="5980.56"
-                android:textSize="18sp"
-                android:drawableLeft="@drawable/rupe_img"
-                app:layout_constraintStart_toEndOf="@+id/Quentity_txt"
-                app:layout_constraintTop_toBottomOf="@+id/stock_name_txt" />
-
-            <TextView
-                android:id="@+id/purchasing_price_txt"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:drawableLeft="@drawable/rupe_img"
-                android:text="598.05"
-                android:textSize="18sp"
-                app:layout_constraintStart_toEndOf="@+id/imageView"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <ImageView
-                android:id="@+id/imageView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="5dp"
-                android:layout_marginTop="10dp"
-                app:layout_constraintStart_toEndOf="@+id/stock_name_txt"
-                app:layout_constraintTop_toTopOf="parent"
-                app:srcCompat="@drawable/bookmark" />
-
-            <TextView
-                android:id="@+id/textView19"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
-                android:layout_marginEnd="10dp"
-                android:text="Total P/L ."
-                android:textSize="18sp"
-                app:layout_constraintEnd_toStartOf="@+id/PL_txt"
-                app:layout_constraintTop_toBottomOf="@+id/share_price_txt" />
-
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
-    </androidx.cardview.widget.CardView>
-</androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.cardview.widget.CardView>

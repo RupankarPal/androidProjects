@@ -13,3 +13,9 @@
 .externalNativeBuild
 .cxx
 local.properties
+.artifacts/
+*.artifact.md
+.idea/
+!.idea/codeStyles/
+!.idea/inspectionProfiles/
+!.idea/vcs.xml

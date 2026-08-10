@@ -1,169 +1,180 @@
 package com.example.bottonnavigation_and_recyclerview_implement_homepage.processing_packages;
 
-import android.Manifest;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
 import android.content.Context;
-import android.content.pm.PackageManager;
-import android.os.Build;
+import android.util.Log;
 
-import androidx.core.app.ActivityCompat;
-import androidx.core.app.NotificationCompat;
-import androidx.core.app.NotificationManagerCompat;
-
+import com.example.bottonnavigation_and_recyclerview_implement_homepage.DatabaseClasses.OrdersDatabaseHelper;
+import com.example.bottonnavigation_and_recyclerview_implement_homepage.Model.OHLC_Model;
 import com.example.bottonnavigation_and_recyclerview_implement_homepage.Model.Order_model;
+import com.example.bottonnavigation_and_recyclerview_implement_homepage.DatabaseClasses.FundDatabase;
+import com.example.bottonnavigation_and_recyclerview_implement_homepage.Model.TradeHistoryModel;
+import com.example.bottonnavigation_and_recyclerview_implement_homepage.utils.MarketTimeManager;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Locale;
 
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+
 public class order_process {
-    ArrayList<Order_model> order_models_array;
-    ArrayList<Order_model> after_Process_arr;
-    Context context;
-    private final String CHANNEL_ID = "Order_process104";
 
-    public order_process(Context context,ArrayList<Order_model> order_models_array) {
-        this.order_models_array = order_models_array;
+    private final Context context;
+
+    public order_process(Context context) {
         this.context = context;
-        createNotificationChannel();
     }
 
-    // variables
-    double order_prise;
-    double stock_price;
-    double stock_quantity;
-    double exicuted_quantity;
-    double targate_price;
-    double sl_price;
-    String stock_name;
-    String Order_type;
+    public ArrayList<OHLC_Model> fetchStockDataSync(String symbol) {
+        String url = "https://query1.finance.yahoo.com/v8/finance/chart/" + symbol + "?interval=1d&range=2d";
+        OkHttpClient client = new OkHttpClient();
+        Request request = new Request.Builder().url(url).addHeader("User-Agent", "Mozilla/5.0").build();
 
-    private void createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            CharSequence name = "MyChannelName";
-            String description = "MyChannelDescription";
-            int importance = NotificationManager.IMPORTANCE_HIGH;
-            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
-            channel.setDescription(description);
+        try (Response response = client.newCall(request).execute()) {
+            if (response.isSuccessful() && response.body() != null) {
+                String jsonData = response.body().string();
+                JSONObject root = new JSONObject(jsonData);
+                JSONObject result = root.getJSONObject("chart").getJSONArray("result").getJSONObject(0);
+                JSONObject quote = result.getJSONObject("indicators").getJSONArray("quote").getJSONObject(0);
+                JSONArray closes = quote.getJSONArray("close");
+                Double close = closes.optDouble(closes.length() - 1, 0.0);
 
-            NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
-            notificationManager.createNotificationChannel(channel);
-        }
-    }
-
-    public void showNotification(String stock_name, double price) {
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
-                .setSmallIcon(android.R.drawable.ic_dialog_info)
-                .setContentTitle("Order Exicuted")
-                .setContentText(stock_name+" Exicuted at @"+price)
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setAutoCancel(true);
-
-        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
-        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
-        notificationManager.notify(1, builder.build());
-    }
-
-    private boolean isOrderExicuted(double currrent_price, double wanted_price){    // order chercking
-
-        if ( wanted_price <= currrent_price ){
-            return true;
-        }
-        return false;
-    }
-
-    private boolean isTargateExicuted(double current_price, double wanted_price, String type){      // targate cheacking
-
-        if (type.toUpperCase(Locale.ROOT)=="BUY"){
-            if ( wanted_price <= current_price ) {
-                return true;
+                ArrayList<OHLC_Model> list = new ArrayList<>();
+                list.add(new OHLC_Model("0", "0", "0", String.format(Locale.getDefault(), "%.5f", close), "0", symbol));
+                return list;
             }
-            return false;
-        } else if (type.toUpperCase(Locale.ROOT) == "SELL") {
-            if (wanted_price >= current_price){
-                return true;
-            }
-            return false;
+        } catch (Exception e) {
+            Log.e("ORDER_PROCESS", "Sync fetch failed: " + e.getMessage());
         }
-        return false;
+        return new ArrayList<>();
     }
 
-    private boolean isSlExicuted(double current_price, double wanted_price, String type){       // sl cheacking
-
-        if (type.toUpperCase(Locale.ROOT)=="BUY"){
-            if ( wanted_price >= current_price ) {
-                return true;
-            }
-            return false;
-        } else if (type.toUpperCase(Locale.ROOT) == "SELL") {
-            if (wanted_price <= current_price){
-                return true;
-            }
-            return false;
-        }
-        return false;
+    public ArrayList<Order_model> getOrderCurrentReport() {
+        OrdersDatabaseHelper odb = new OrdersDatabaseHelper(context);
+        ArrayList<Order_model> list = odb.getAllOrders();
+        odb.close();
+        return list;
     }
 
-    public ArrayList<Order_model> getOrderCurrentReport(){
-        int index = 0;
-        while (order_models_array!=null){
-            order_prise = order_models_array.get(index).getOrder_prise();
-            stock_price = order_models_array.get(index).getStock_price();
-            stock_quantity = order_models_array.get(index).getStock_quantity();
-            exicuted_quantity = order_models_array.get(index).getExicuted_quantity();
-            targate_price = order_models_array.get(index).getTargate_price();
-            sl_price = order_models_array.get(index).getSl_price();
-            stock_name = order_models_array.get(index).getStock_name();
-            Order_type = order_models_array.get(index).getOrder_type();
+    private static final Object lock = new Object();
+    private static final java.util.Set<Integer> processingOrders = new java.util.HashSet<>();
 
-            if (exicuted_quantity!=stock_quantity){
-                if (isOrderExicuted(stock_price,order_prise)){  // we exicute the order
-                    exicuted_quantity=stock_quantity;
-                    after_Process_arr.add(new Order_model(order_prise,stock_price,stock_quantity,exicuted_quantity,targate_price,sl_price,stock_name,Order_type));
-                    showNotification(stock_name,order_prise);
+    public void matchPendingOrders() {
+        synchronized (lock) {
+            OrdersDatabaseHelper odb = new OrdersDatabaseHelper(context);
+            FundDatabase fdb = new FundDatabase(context);
+            ArrayList<Order_model> allOrders = odb.getAllOrders();
+
+            for (Order_model order : allOrders) {
+                // Skip if already executed or currently being processed by another thread
+                if (order.getExicuted_quantity() >= order.getStock_quantity() || processingOrders.contains(order.getId())) {
+                    continue;
                 }
-            }
 
-            if (targate_price!=0){  // when we have targate price
-                if (isTargateExicuted(stock_price,targate_price,Order_type)){
-                    sl_price=0;   // we bolck the sl price to cheack it again
-                    if (Order_type.toUpperCase(Locale.ROOT)=="BUY"){
-                        Order_type="SELL";
-                        after_Process_arr.add(new Order_model(order_prise,stock_price,stock_quantity,exicuted_quantity,targate_price,sl_price,stock_name,Order_type));
-                    }
-                    Order_type="BUY";
-                    after_Process_arr.add(new Order_model(order_prise,stock_price,stock_quantity,exicuted_quantity,targate_price,sl_price,stock_name,Order_type));
-                    showNotification(stock_name,targate_price);
-                }
-            }
+                MarketTimeManager.MarketType mType = MarketTimeManager.getMarketType(order.getStock_name());
+                if (!MarketTimeManager.isMarketOpen(mType)) continue;
 
-            if (sl_price!=0){    // when we have sl price
-                if (isSlExicuted(stock_price,sl_price,Order_type)){
-                    targate_price = 0;  // we bolck the targate price to cheack it again
-                    if (isTargateExicuted(stock_price,targate_price,Order_type)) {
-                        sl_price = 0;   // we bolck the sl price to cheack it again
-                        if (Order_type.toUpperCase(Locale.ROOT) == "BUY") {
-                            Order_type = "SELL";
-                            after_Process_arr.add(new Order_model(order_prise, stock_price, stock_quantity, exicuted_quantity, targate_price, sl_price, stock_name, Order_type));
+                ArrayList<OHLC_Model> ohlcList = fetchStockDataSync(order.getStock_name());
+                if (ohlcList.isEmpty()) continue;
+                
+                double ltp = parseDoubleSafe(ohlcList.get(ohlcList.size() - 1).getClose());
+                double limitPrice = order.getOrder_prise();
+                double sl = order.getSl_price();
+                double target = order.getTargate_price();
+                double trailingSl = order.getTrailingSl();
+
+                boolean shouldExecute = false;
+                
+                // Trailing SL logic
+                if (trailingSl > 0) {
+                    if (order.getOrder_type().equalsIgnoreCase("BUY")) {
+                        double newSl = ltp - trailingSl;
+                        if (newSl > sl) {
+                            order.setSl_price(newSl);
+                            odb.modifyOrder(order.getId(), order);
+                            sl = newSl;
                         }
-                        Order_type = "BUY";
-                        after_Process_arr.add(new Order_model(order_prise, stock_price, stock_quantity, exicuted_quantity, targate_price, sl_price, stock_name, Order_type));
-                        showNotification(stock_name, sl_price);
+                    } else {
+                        double newSl = ltp + trailingSl;
+                        if (sl == 0 || newSl < sl) {
+                            order.setSl_price(newSl);
+                            odb.modifyOrder(order.getId(), order);
+                            sl = newSl;
+                        }
+                    }
+                }
+
+                if (order.getOrder_type().equalsIgnoreCase("BUY")) {
+                    if (limitPrice == 0 || ltp <= limitPrice) shouldExecute = true;
+                    if (sl > 0 && ltp <= sl) shouldExecute = false; 
+                } else {
+                    if (limitPrice == 0 || ltp >= limitPrice) shouldExecute = true;
+                    if (target > 0 && ltp >= target) shouldExecute = true; 
+                    if (sl > 0 && ltp <= sl) shouldExecute = true; 
+                }
+
+                if (shouldExecute) {
+                    processingOrders.add(order.getId());
+                    try {
+                        executeOrder(odb, fdb, order, ltp);
+                    } finally {
+                        processingOrders.remove(order.getId());
                     }
                 }
             }
-
+            odb.close();
+            fdb.close();
         }
-        return after_Process_arr;
     }
 
+    private void executeOrder(OrdersDatabaseHelper odb, FundDatabase fdb, Order_model order, double ltp) {
+        order.setExicuted_quantity(order.getStock_quantity());
+        odb.modifyOrder(order.getId(), order); 
+        
+        Calendar cal = Calendar.getInstance();
+        String date = cal.get(Calendar.DAY_OF_MONTH) + "/" + (cal.get(Calendar.MONTH) + 1) + "/" + cal.get(Calendar.YEAR);
+        
+        double entryPrice = order.getStock_price(); // This is the basis price captured at order creation
+        double qty = order.getStock_quantity();
+        double pl;
+        double percent;
+
+        if (order.getOrder_type().equalsIgnoreCase("BUY")) {
+            double currentQtyBefore = fdb.getAvailableQuantity(order.getStock_name());
+            if (currentQtyBefore < -0.0001) {
+                // Closing a SHORT position (Covering)
+                // Profit = (Entry Price - Exit Price) * Qty
+                pl = (entryPrice - ltp) * qty; 
+                percent = entryPrice != 0 ? ((entryPrice - ltp) / entryPrice) * 100 : 0;
+                fdb.addTradeToHistory(new TradeHistoryModel(order.getStock_name(), qty, entryPrice, ltp, entryPrice * qty, ltp * qty, pl, percent, date));
+            }
+            fdb.addStockToPortfolio(order.getStock_name(), ltp, order.getStock_quantity(), date, order.getProduct_type());
+        } else {
+            // SELL order
+            double currentQtyBefore = fdb.getAvailableQuantity(order.getStock_name());
+            if (currentQtyBefore > 0.0001) {
+                // Closing a LONG position
+                // Profit = (Exit Price - Entry Price) * Qty
+                pl = (ltp - entryPrice) * qty; 
+                percent = entryPrice != 0 ? ((ltp - entryPrice) / entryPrice) * 100 : 0;
+                fdb.addTradeToHistory(new TradeHistoryModel(order.getStock_name(), qty, entryPrice, ltp, entryPrice * qty, ltp * qty, pl, percent, date));
+            }
+            fdb.sellStockFromPortfolio(order.getStock_name(), order.getStock_quantity(), ltp, date, order.getProduct_type());
+        }
+        Log.d("ORDER_ENGINE", "Executed " + order.getOrder_type() + " for " + order.getStock_name() + " at " + ltp);
+    }
+
+    private double parseDoubleSafe(String str) {
+        if (str == null || str.isEmpty() || str.equals("--")) return 0.0;
+        try {
+            String clean = str.replace("₹", "").replace("%", "").replace(",", "").replace("(", "").replace(")", "").trim();
+            return Double.parseDouble(clean);
+        } catch (Exception e) {
+            return 0.0;
+        }
+    }
 }

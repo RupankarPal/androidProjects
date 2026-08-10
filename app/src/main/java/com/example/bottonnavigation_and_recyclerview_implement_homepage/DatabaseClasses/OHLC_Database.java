@@ -42,42 +42,90 @@ public class OHLC_Database extends SQLiteOpenHelper {
                 COL_PREV_CLOSE + " TEXT, " +
                 COL_VOLUME + " INTEGER)";
         db.execSQL(CREATE_OHLC);
+
+        // Also create stocks_data table used by StocksRow_DatabaseHelper
+        String CREATE_STOCKS_DATA = "CREATE TABLE IF NOT EXISTS stocks_data (" +
+                "stocks_name TEXT PRIMARY KEY, " +
+                "stocks_price TEXT, " +
+                "percentile TEXT, " +
+                "todayChange TEXT)";
+        db.execSQL(CREATE_STOCKS_DATA);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        // This is the key change. We check the old version to see what updates are needed.
         if (oldVersion < 2) {
-            // Add the new column "prev_close" to the existing table
-            db.execSQL("ALTER TABLE " + TABLE_NAME + " ADD COLUMN " + COL_PREV_CLOSE + " TEXT");
+            // Safely add prev_close if it doesn't exist
+            if (!isColumnExists(db, TABLE_NAME, COL_PREV_CLOSE)) {
+                db.execSQL("ALTER TABLE " + TABLE_NAME + " ADD COLUMN " + COL_PREV_CLOSE + " TEXT");
+            }
+            
+            // Ensure stocks_data table exists
+            db.execSQL("CREATE TABLE IF NOT EXISTS stocks_data (" +
+                    "stocks_name TEXT PRIMARY KEY, " +
+                    "stocks_price TEXT, " +
+                    "percentile TEXT, " +
+                    "todayChange TEXT)");
         }
     }
 
+    private boolean isColumnExists(SQLiteDatabase db, String tableName, String columnName) {
+        Cursor cursor = db.rawQuery("PRAGMA table_info(" + tableName + ")", null);
+        try {
+            if (cursor.moveToFirst()) {
+                do {
+                    String name = cursor.getString(cursor.getColumnIndexOrThrow("name"));
+                    if (columnName.equalsIgnoreCase(name)) {
+                        return true;
+                    }
+                } while (cursor.moveToNext());
+            }
+        } finally {
+            cursor.close();
+        }
+        return false;
+    }
+
+
     // Insert or update list of OHLC data
-    public void insertOrUpdateOHLCList(ArrayList<OHLC_Model> ohlcList, String prev_close) {
+    public void UpdateOHLCList(OHLC_Model ohlcList, String prev_close) {
         SQLiteDatabase db = this.getWritableDatabase();
 
-        for (OHLC_Model model : ohlcList) {
             ContentValues values = new ContentValues();
-            values.put(COL_OPEN, model.getOpen());
-            values.put(COL_HIGH, model.getHigh());
-            values.put(COL_LOW, model.getLow());
-            values.put(COL_CLOSE, model.getClose());
+            values.put(COL_OPEN, ohlcList.getOpen());
+            values.put(COL_HIGH, ohlcList.getHigh());
+            values.put(COL_LOW, ohlcList.getLow());
+            values.put(COL_CLOSE, ohlcList.getClose());
             values.put(COL_PREV_CLOSE, prev_close);
-            values.put(COL_VOLUME, model.getVolume());
-            values.put(COL_NAME, model.getName());
+            values.put(COL_VOLUME, ohlcList.getVolume());
+            values.put(COL_NAME, ohlcList.getName());
 
-            // Try update first
-            int rows = db.update(TABLE_NAME, values, COL_NAME + "=?", new String[]{model.getName()});
+            //  update the data base
+            db.update(TABLE_NAME, values, COL_NAME + "=?", new String[]{ohlcList.getName()});
 
-            // If no row updated, insert new
-            if (rows == 0) {
-                db.insert(TABLE_NAME, null, values);
-            }
-        }
 
         db.close();
     }
+
+    public void insertOHLCList(OHLC_Model ohlcList, String prev_close) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+
+            ContentValues values = new ContentValues();
+            values.put(COL_OPEN, ohlcList.getOpen());
+            values.put(COL_HIGH, ohlcList.getHigh());
+            values.put(COL_LOW, ohlcList.getLow());
+            values.put(COL_CLOSE, ohlcList.getClose());
+            values.put(COL_PREV_CLOSE, prev_close);
+            values.put(COL_VOLUME, ohlcList.getVolume());
+            values.put(COL_NAME, ohlcList.getName());
+
+            db.insert(TABLE_NAME, null, values);
+
+
+        db.close();
+    }
+
 
     // Get all OHLC records
     public ArrayList<OHLC_Model> getAllOHLC() {
@@ -124,4 +172,39 @@ public class OHLC_Database extends SQLiteOpenHelper {
         return list;
     }
 
+    // Cache methods for UI persistence
+    public void updateStockCache(String symbol, String price, String percentile, String change) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("stocks_name", symbol);
+        values.put("stocks_price", price);
+        values.put("percentile", percentile);
+        values.put("todayChange", change);
+
+        int rows = db.update("stocks_data", values, "stocks_name=?", new String[]{symbol});
+        if (rows == 0) {
+            db.insert("stocks_data", null, values);
+        }
+        db.close();
+    }
+
+    public ArrayList<OHLC_Model> getAllCachedStocks() {
+        ArrayList<OHLC_Model> list = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT * FROM stocks_data", null);
+
+        if (cursor.moveToFirst()) {
+            do {
+                list.add(new OHLC_Model(
+                        "0", "0", "0",
+                        cursor.getString(cursor.getColumnIndexOrThrow("stocks_price")),
+                        "0",
+                        cursor.getString(cursor.getColumnIndexOrThrow("stocks_name"))
+                ));
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        db.close();
+        return list;
+    }
 }

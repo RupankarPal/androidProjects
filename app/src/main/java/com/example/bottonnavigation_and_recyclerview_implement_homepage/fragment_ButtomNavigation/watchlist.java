@@ -2,6 +2,7 @@ package com.example.bottonnavigation_and_recyclerview_implement_homepage.fragmen
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -9,8 +10,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -18,16 +19,14 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.android.volley.RequestQueue;
-import com.android.volley.toolbox.Volley;
 import com.example.bottonnavigation_and_recyclerview_implement_homepage.Adapter.Recyclear_stacks_row_Adapter_watchlist;
 import com.example.bottonnavigation_and_recyclerview_implement_homepage.DatabaseClasses.StocksRow_DatabaseHelper;
 import com.example.bottonnavigation_and_recyclerview_implement_homepage.Model.OHLC_Model;
 import com.example.bottonnavigation_and_recyclerview_implement_homepage.Model.stocks_row_Model;
 import com.example.bottonnavigation_and_recyclerview_implement_homepage.R;
-import com.example.bottonnavigation_and_recyclerview_implement_homepage.processing_packages.StockDataProcessor;
 import com.example.bottonnavigation_and_recyclerview_implement_homepage.processing_packages.YahooStockDataFeatch;
 import com.example.bottonnavigation_and_recyclerview_implement_homepage.searchActivity;
+import com.example.bottonnavigation_and_recyclerview_implement_homepage.utils.MarketTimeManager;
 
 import java.util.ArrayList;
 
@@ -36,22 +35,21 @@ public class watchlist extends Fragment {
     private ArrayList<stocks_row_Model> stocksRowModels_arr = new ArrayList<>();
     private RecyclerView recyclerView;
     private Recyclear_stacks_row_Adapter_watchlist adapter;
-    private ImageView searchImgBtn, sortedImgBtn;
+    private ImageView searchImgBtn;
+    private Button btnIndian, btnUs, btnCrypto, btnIndex;
     private Context context;
-    private RequestQueue requestQueue;
 
     private Handler handler;
     private Runnable stockFetcher;
 
-    // Predefined stock symbols
-    private final String[] stockSymbols = {
-            "NVDA", "MSFT", "AAPL", "GOOGL", "AMZN",
-            "META", "AVGO", "TSLA", "BRK.B", "TSM",
-            "JPM", "WMT", "ORCL", "V", "LLY",
-            "NFLX", "MA", "XOM", "COST", "JNJ",
-            "PLTR", "HD", "ABBV", "PG", "BAC",
-            "CVX", "KO", "AMD", "TMUS", "GE"
-    };
+    // Predefined stock symbols for categories
+    private final String[] indianSymbols = {"RELIANCE.NS", "TCS.NS", "HDFCBANK.NS", "INFY.NS", "ICICIBANK.NS", "SBIN.NS", "BHARTIARTL.NS", "ITC.NS"};
+    private final String[] usSymbols = {"AAPL", "GOOGL", "MSFT", "AMZN", "TSLA", "NFLX", "META", "NVDA"};
+    private final String[] cryptoSymbols = {"BTC-USD", "ETH-USD", "BNB-USD", "XRP-USD", "ADA-USD", "SOL-USD", "DOGE-USD", "DOT-USD"};
+    private final String[] indexSymbols = {"^NSEI", "^NSEBANK", "^NSEMDCP50", "^CNXIT", "^BSESN"};
+
+    private String[] currentSymbols = indianSymbols;
+    private boolean isInitialCategoryFetch = true;
 
     @Nullable
     @Override
@@ -60,85 +58,175 @@ public class watchlist extends Fragment {
 
         View view = inflater.inflate(R.layout.fragment_watchlist, container, false);
         context = getActivity();
-        requestQueue = Volley.newRequestQueue(context);
 
-        // UI setup (no changes needed here)
+        // UI setup
         searchImgBtn = view.findViewById(R.id.search_img_btn);
-        searchImgBtn.setOnClickListener(v -> {
-            Intent intent = new Intent(context, searchActivity.class);
-            startActivity(intent);
-        });
+        if (searchImgBtn != null) {
+            searchImgBtn.setOnClickListener(v -> {
+                Intent intent = new Intent(context, searchActivity.class);
+                startActivity(intent);
+            });
+        }
 
-        sortedImgBtn = view.findViewById(R.id.shorted_img_btn);
-        sortedImgBtn.setOnClickListener(v ->
-                Toast.makeText(context, "Work in progress", Toast.LENGTH_SHORT).show()
-        );
+        // Category Buttons
+        btnIndian = view.findViewById(R.id.btn_indian);
+        btnUs = view.findViewById(R.id.btn_us);
+        btnCrypto = view.findViewById(R.id.btn_crypto);
+        btnIndex = view.findViewById(R.id.btn_index);
+
+        View.OnClickListener categoryListener = v -> {
+            resetCategoryButtonColors();
+            ((Button)v).setTextColor(getResources().getColor(R.color.violet, null));
+            ((Button)v).setTypeface(null, Typeface.BOLD);
+            
+            int id = v.getId();
+            if (id == R.id.btn_indian) currentSymbols = indianSymbols;
+            else if (id == R.id.btn_us) currentSymbols = usSymbols;
+            else if (id == R.id.btn_crypto) currentSymbols = cryptoSymbols;
+            else if (id == R.id.btn_index) currentSymbols = indexSymbols;
+
+            isInitialCategoryFetch = true;
+            refreshWatchlist();
+        };
+
+        if (btnIndian != null) btnIndian.setOnClickListener(categoryListener);
+        if (btnUs != null) btnUs.setOnClickListener(categoryListener);
+        if (btnCrypto != null) btnCrypto.setOnClickListener(categoryListener);
+        if (btnIndex != null) btnIndex.setOnClickListener(categoryListener);
 
         // RecyclerView setup
         recyclerView = view.findViewById(R.id.recicle_watchlist);
         adapter = new Recyclear_stacks_row_Adapter_watchlist(stocksRowModels_arr, context);
-        recyclerView.setLayoutManager(new LinearLayoutManager(context));
-        recyclerView.setAdapter(adapter);
-
-        // Initial data load from the database
-        StocksRow_DatabaseHelper db = new StocksRow_DatabaseHelper(context);
-        ArrayList<stocks_row_Model> initialStocks = db.getAllStocks();
-        if (initialStocks.isEmpty()) {
-            // If the database is empty, add placeholder items to prevent a crash
-            // and prepare the list for updates.
-            for (String symbol : stockSymbols) {
-                stocks_row_Model placeholder = new stocks_row_Model(symbol, "--", "--", "--");
-                stocksRowModels_arr.add(placeholder);
-            }
-            adapter.notifyDataSetChanged();
-        } else {
-            // If data exists, use it to populate the list
-            stocksRowModels_arr.addAll(initialStocks);
-            adapter.notifyDataSetChanged();
+        if (recyclerView != null) {
+            recyclerView.setLayoutManager(new LinearLayoutManager(context));
+            recyclerView.setAdapter(adapter);
         }
+
+        refreshWatchlist();
 
         // Handler for repeated stock fetching
         handler = new Handler(Looper.getMainLooper());
         stockFetcher = new Runnable() {
             @Override
             public void run() {
-                for (String symbol : stockSymbols) {
-                    YahooStockDataFeatch.fetchStockData(context, symbol, new YahooStockDataFeatch.StockDataCallback() {
-                        @Override
-                        public void onSuccess(String symbol, ArrayList<OHLC_Model> ohlcList) {
-                            Log.d("WATCHLIST", "Fetched OHLC for: " + symbol);
+                if (context == null || !isAdded()) return;
+                
+                MarketTimeManager.MarketType type = MarketTimeManager.getMarketType(currentSymbols[0]);
+                boolean isOpen = MarketTimeManager.isMarketOpen(type);
 
-                            // Process data into DB
-                            StockDataProcessor.processAndStore(context, symbol);
-
-                            // Retrieve the updated stock model from the database
-                            StocksRow_DatabaseHelper db = new StocksRow_DatabaseHelper(context);
-                            stocks_row_Model updatedStock = db.getStockBySymbol(symbol);
-
-                            if (updatedStock != null) {
-                                // Find and update the specific item in the list
-                                int position = findStockPosition(symbol);
-                                if (position != -1) {
-                                    stocksRowModels_arr.set(position, updatedStock);
-                                    adapter.notifyItemChanged(position);
-                                }
-                            }
-                        }
-
-                        @Override
-                        public void onFailure(String symbol, String error) {
-                            Log.e("WATCHLIST", "Failed for " + symbol + ": " + error);
-                        }
-                    });
+                // Polling logic: Fetch if market is open OR if data is still missing ("--")
+                boolean hasMissingData = false;
+                for (stocks_row_Model model : stocksRowModels_arr) {
+                    if (model.getStocks_price().equals("--")) {
+                        hasMissingData = true;
+                        break;
+                    }
                 }
-                handler.postDelayed(this, 2000);
+
+                if (isOpen || isInitialCategoryFetch || hasMissingData) {
+                    for (int i = 0; i < currentSymbols.length; i++) {
+                        final String symbol = currentSymbols[i];
+                        handler.postDelayed(() -> fetchAndUpdate(symbol), (long) i * 150);
+                    }
+                    isInitialCategoryFetch = false;
+                }
+                
+                handler.postDelayed(this, isOpen ? 2000 : 5000);
             }
         };
 
-        // Start fetching immediately
-        handler.post(stockFetcher);
-
         return view;
+    }
+
+    private void resetCategoryButtonColors() {
+        int black = getResources().getColor(R.color.black, null);
+        if (btnIndian != null) {
+            btnIndian.setTextColor(black);
+            btnIndian.setTypeface(null, Typeface.NORMAL);
+        }
+        if (btnUs != null) {
+            btnUs.setTextColor(black);
+            btnUs.setTypeface(null, Typeface.NORMAL);
+        }
+        if (btnCrypto != null) {
+            btnCrypto.setTextColor(black);
+            btnCrypto.setTypeface(null, Typeface.NORMAL);
+        }
+        if (btnIndex != null) {
+            btnIndex.setTextColor(black);
+            btnIndex.setTypeface(null, Typeface.NORMAL);
+        }
+    }
+
+    private void refreshWatchlist() {
+        if (context == null) return;
+        stocksRowModels_arr.clear();
+        StocksRow_DatabaseHelper db = new StocksRow_DatabaseHelper(context);
+        ArrayList<stocks_row_Model> cached = db.getAllStocks();
+        
+        for (String symbol : currentSymbols) {
+            boolean found = false;
+            for (stocks_row_Model model : cached) {
+                if (model.getStocks_name().equals(symbol)) {
+                    stocksRowModels_arr.add(model);
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                stocksRowModels_arr.add(new stocks_row_Model(symbol, "--", "0.00", "0.00"));
+            }
+        }
+        if (adapter != null) {
+            adapter.notifyDataSetChanged();
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (handler != null && stockFetcher != null) {
+            isInitialCategoryFetch = true;
+            handler.post(stockFetcher);
+        }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        if (handler != null && stockFetcher != null) {
+            handler.removeCallbacks(stockFetcher);
+        }
+    }
+
+    private void fetchAndUpdate(String symbol) {
+        if (context == null || !isAdded()) return;
+        
+        YahooStockDataFeatch.fetchStockData(context, symbol, new YahooStockDataFeatch.StockDataCallback() {
+            @Override
+            public void onSuccess(String fetchedSymbol, ArrayList<OHLC_Model> ohlcList, String percent, String change) {
+                if (!isAdded() || getContext() == null) return;
+                
+                StocksRow_DatabaseHelper db = new StocksRow_DatabaseHelper(getContext());
+                stocks_row_Model updatedStock = db.getStockBySymbol(fetchedSymbol);
+
+                if (updatedStock != null) {
+                    new Handler(Looper.getMainLooper()).post(() -> {
+                        if (!isAdded()) return;
+                        int position = findStockPosition(fetchedSymbol);
+                        if (position != -1 && position < stocksRowModels_arr.size()) {
+                            stocksRowModels_arr.set(position, updatedStock);
+                            adapter.notifyItemChanged(position);
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void onFailure(String symbol, String error) {
+                Log.e("WATCHLIST", "Fetch Failed: " + symbol);
+            }
+        });
     }
 
     private int findStockPosition(String symbol) {
@@ -154,7 +242,7 @@ public class watchlist extends Fragment {
     public void onDestroyView() {
         super.onDestroyView();
         if (handler != null && stockFetcher != null) {
-            handler.removeCallbacks(stockFetcher); // Stop updates when fragment is destroyed
+            handler.removeCallbacks(stockFetcher);
         }
     }
 }

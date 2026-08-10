@@ -4,6 +4,9 @@ import java.io.Serializable;
 
 public class Order_model implements Serializable {
 
+    private int id;
+
+
     private double order_prise;
     private double stock_price;
     private double stock_quantity;
@@ -12,8 +15,11 @@ public class Order_model implements Serializable {
     private double sl_price;
     private String stock_name;
     private String Order_type;
+    private String product_type; // NEW
+    private String time;
+    private double trailingSl;
 
-    public Order_model(double order_prise, double stock_price, double stock_quantity, double exicuted_quantity, double targate_price, double sl_price, String stock_name, String Order_Type) {
+    public Order_model(double order_prise, double stock_price, double stock_quantity, double exicuted_quantity, double targate_price, double sl_price, String stock_name, String Order_Type, String time, double trailingSl, String product_type) {
         this.order_prise = order_prise;
         this.stock_price = stock_price;
         this.stock_quantity = stock_quantity;
@@ -22,7 +28,36 @@ public class Order_model implements Serializable {
         this.stock_name = stock_name;
         this.Order_type = Order_Type;
         this.exicuted_quantity = exicuted_quantity;
+        this.time = time;
+        this.trailingSl = trailingSl;
+        this.product_type = product_type;
     }
+
+    public Order_model(int id, double order_prise, double stock_price, double stock_quantity, double exicuted_quantity, double targate_price, double sl_price, String stock_name, String Order_Type, String time, double trailingSl, String product_type) {
+        this.id = id;
+        this.order_prise = order_prise;
+        this.stock_price = stock_price;
+        this.stock_quantity = stock_quantity;
+        this.targate_price = targate_price;
+        this.sl_price = sl_price;
+        this.stock_name = stock_name;
+        this.Order_type = Order_Type;
+        this.exicuted_quantity = exicuted_quantity;
+        this.time = time;
+        this.trailingSl = trailingSl;
+        this.product_type = product_type;
+    }
+
+
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
 
     public double getExicuted_quantity() {
         return exicuted_quantity;
@@ -87,4 +122,30 @@ public class Order_model implements Serializable {
     public void setExicuted_quantity(double exicuted_quantity) {
         this.exicuted_quantity = exicuted_quantity;
     }
+
+    public String getTime() {
+        return time;
+    }
+
+    public void setTime(String time) {
+        this.time = time;
+    }
+
+    public double getTrailingSl() {
+        return trailingSl;
+    }
+
+    public void setTrailingSl(double trailingSl) {
+        this.trailingSl = trailingSl;
+    }
+
+    public String getProduct_type() {
+        return product_type;
+    }
+
+    public void setProduct_type(String product_type) {
+        this.product_type = product_type;
+    }
 }
+
+
