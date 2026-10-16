@@ -15,7 +15,7 @@ public class SubscriptionManager {
     private static final String KEY_IS_PREMIUM = "isPremium";
     
     // RAZORPAY KEY - Replace with actual Key from Razorpay Dashboard
-    public static final String RAZORPAY_KEY_ID = "";
+    public static final String RAZORPAY_KEY_ID = "YOUR_RAZORPAY_KEY_ID";
 
     public static boolean isPremium(Context context) {
         if (context == null) return false;

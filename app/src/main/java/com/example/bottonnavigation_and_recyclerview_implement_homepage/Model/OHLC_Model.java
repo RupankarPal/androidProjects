@@ -1,12 +1,15 @@
 package com.example.bottonnavigation_and_recyclerview_implement_homepage.Model;
 
-public class OHLC_Model {
+import java.io.Serializable;
+
+public class OHLC_Model implements Serializable {
     private String open;
     private String high;
     private String low;
     private String close;
     private String volume;
     private String Name;
+    private long timestamp;
 
     public OHLC_Model(String open, String high, String low, String close, String volume, String Name) {
         this.open = open;
@@ -15,6 +18,11 @@ public class OHLC_Model {
         this.close = close;
         this.volume = volume;
         this.Name = Name;
+    }
+
+    public OHLC_Model(String open, String high, String low, String close, String volume, String Name, long timestamp) {
+        this(open, high, low, close, volume, Name);
+        this.timestamp = timestamp;
     }
 
     public void setName(String name) {
@@ -63,5 +71,13 @@ public class OHLC_Model {
 
     public String getClose() {
         return close;
+    }
+
+    public long getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
     }
 }

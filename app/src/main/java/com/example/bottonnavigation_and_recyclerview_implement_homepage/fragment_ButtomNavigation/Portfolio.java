@@ -194,23 +194,21 @@ public class Portfolio extends Fragment {
                         if (globalPos != -1) {
                             portfolio_stocks_model currentStock = allHoldings.get(globalPos);
                             double ltp = parseDoubleSafe(latest.getClose());
-                            double open = parseDoubleSafe(latest.getOpen());
                             double avgPrice = parseDoubleSafe(currentStock.getPercheasing_price());
                             double qty = parseDoubleSafe(currentStock.getStocks_quantity());
                             
                             double pl = (ltp - avgPrice) * qty;
-                            double percent = avgPrice != 0 ? ((ltp - avgPrice) / avgPrice) * 100 : 0;
-                            double dailyChangePercent = open != 0 ? ((ltp - open) / open) * 100 : 0;
+                            double totalReturnPercent = avgPrice != 0 ? ((ltp - avgPrice) / avgPrice) * 100 : 0;
 
                             portfolio_stocks_model updated = new portfolio_stocks_model(
                                     fetchedSymbol, 
                                     String.format(Locale.getDefault(), "₹%.5f", ltp),
-                                    String.format(Locale.getDefault(), "%.2f%%", percent),
+                                    String.format(Locale.getDefault(), "%.2f%%", totalReturnPercent),
                                     currentStock.getPercheasing_price(),
                                     currentStock.getStocks_quantity(),
                                     currentStock.getInvest_amount(),
                                     String.format(Locale.getDefault(), "₹%.5f", pl),
-                                    String.format(Locale.getDefault(), "%.2f%%", dailyChangePercent)
+                                    String.format(Locale.getDefault(), "%s%%", pPercent) // Use accurate daily percent from callback
                             );
 
 
@@ -241,15 +239,30 @@ public class Portfolio extends Fragment {
         
         double grandTotalInvested = 0;
         double grandTotalPL = 0;
+        double totalDailyPL = 0;
         
         // Summing up everything from allHoldings for the Grand Total
         for (portfolio_stocks_model stock : allHoldings) {
             grandTotalInvested += parseDoubleSafe(stock.getInvest_amount());
             grandTotalPL += parseDoubleSafe(stock.getPl_amount());
+            
+            // Daily PL = (LTP - PrevClose) * Qty = DailyChangeValue * Qty
+            // We can derive DailyChangeValue from DailyChangePercent if we had it, but
+            // we've updated portfolio_stocks_model to store daily change as String.
+            // Let's assume daily_change String is the percentage.
+            double ltp = parseDoubleSafe(stock.getStocks_price());
+            double dailyPct = parseDoubleSafe(stock.getDaily_change()); // e.g. 0.45
+            double qty = parseDoubleSafe(stock.getStocks_quantity());
+            
+            // prevClose = ltp / (1 + dailyPct/100)
+            double prevClose = ltp / (1 + (dailyPct / 100));
+            double dailyChangeVal = ltp - prevClose;
+            totalDailyPL += dailyChangeVal * qty;
         }
         
         double currentVal = grandTotalInvested + grandTotalPL;
         double totalReturnPercent = grandTotalInvested > 0 ? (grandTotalPL / grandTotalInvested) * 100 : 0;
+        double dailyReturnPercent = (currentVal - totalDailyPL) > 0 ? (totalDailyPL / (currentVal - totalDailyPL)) * 100 : 0;
 
         invest_amount_txt.setText(String.format(Locale.getDefault(), "₹%.2f", grandTotalInvested));
         current_amount_txt.setText(String.format(Locale.getDefault(), "₹%.2f", currentVal));
@@ -257,7 +270,8 @@ public class Portfolio extends Fragment {
         total_pl_txt.setText(String.format(Locale.getDefault(), "₹%.2f (%.2f%%)", grandTotalPL, totalReturnPercent));
         total_pl_txt.setTextColor(grandTotalPL >= 0 ? Color.parseColor("#0F9715") : Color.RED);
 
-        todays_change_txt.setText("0.00 (0.00%)");
+        todays_change_txt.setText(String.format(Locale.getDefault(), "₹%.2f (%.2f%%)", totalDailyPL, dailyReturnPercent));
+        todays_change_txt.setTextColor(totalDailyPL >= 0 ? Color.parseColor("#0F9715") : Color.RED);
     }
 
     private double parseDoubleSafe(String str) {

@@ -40,7 +40,7 @@ public class My_acount extends Fragment {
     private void lodeRewardAdd(Activity context){
         AdRequest adRequest = new AdRequest.Builder().build();
 
-        RewardedAd.load(context, "ca-app-pub-5307098553494261/5464605667", adRequest, new RewardedAdLoadCallback() {
+        RewardedAd.load(context, "ca-app-pub-3940256099942544/5224354917", adRequest, new RewardedAdLoadCallback() {
             @Override
             public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
                 rewardedAd = null;

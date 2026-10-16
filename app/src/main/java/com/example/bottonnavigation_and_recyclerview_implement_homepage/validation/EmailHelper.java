@@ -18,8 +18,8 @@ import jakarta.mail.internet.MimeMessage;
 
 public class EmailHelper {
 
-    private final String senderEmail = "@gmail.com"; // Replace with your Gmail
-    private final String appPassword = ""; // Replace with 16-digit App Password
+    private final String senderEmail = "xyz@gmail.com"; // Replace with your Gmail
+    private final String appPassword = "pasword"; // Replace with 16-digit App Password
     // Callback interface to update the UI later
     public interface EmailCallback {
         void onSuccess();

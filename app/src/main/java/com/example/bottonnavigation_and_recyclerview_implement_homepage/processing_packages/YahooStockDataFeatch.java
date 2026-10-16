@@ -127,11 +127,10 @@ public class YahooStockDataFeatch {
                                     String.format(Locale.getDefault(), "%.5f", h),
                                     String.format(Locale.getDefault(), "%.5f", l),
                                     String.format(Locale.getDefault(), "%.5f", c),
-                                    String.format(Locale.getDefault(), "%.5f", v),
-                                    symbol
+                                    String.format(Locale.getDefault(), "%.2f", v),
+                                    symbol,
+                                    t
                             );
-                            // We use volume field to store timestamp for ChartActivity to consume if needed
-                            if (t > 0) model.setVolume(String.valueOf(t)); 
                             ohlcList.add(model);
                         }
 
@@ -153,7 +152,14 @@ public class YahooStockDataFeatch {
                         }
                         
                         double currentPrice = Double.parseDouble(latest.getClose());
-                        if (prevClose == 0 && closes.length() > 1) {
+                        // FIX: Ensure prevClose is yesterday's close for "Today's Change" accuracy
+                        // Meta chartPreviousClose is preferred. Fallback to size-2 point if fetching daily data.
+                        double metaPrevClose = meta.optDouble("chartPreviousClose", 0.0);
+                        if (metaPrevClose > 0) {
+                            prevClose = metaPrevClose;
+                        } else if (interval.equals("1d") && ohlcList.size() > 1) {
+                            prevClose = Double.parseDouble(ohlcList.get(ohlcList.size() - 2).getClose());
+                        } else if (prevClose == 0 && closes.length() > 1) {
                             prevClose = closes.optDouble(0, currentPrice);
                         }
                         
