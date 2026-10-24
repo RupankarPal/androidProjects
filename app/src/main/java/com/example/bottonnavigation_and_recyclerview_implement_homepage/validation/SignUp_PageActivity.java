@@ -1,6 +1,5 @@
 package com.example.bottonnavigation_and_recyclerview_implement_homepage.validation;
 
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -35,6 +34,7 @@ public class SignUp_PageActivity extends AppCompatActivity {
             return insets;
         });
 
+        //login button code
         Button login_btn;
         login_btn = findViewById(R.id.login_btn);
         login_btn.setOnClickListener(new View.OnClickListener() {
@@ -46,6 +46,7 @@ public class SignUp_PageActivity extends AppCompatActivity {
             }
         });
 
+
         EditText email_edt, password_edt, reenter_password_edt;
         email_edt = findViewById(R.id.username);
         password_edt = findViewById(R.id.password);
@@ -56,9 +57,9 @@ public class SignUp_PageActivity extends AppCompatActivity {
 
             @Override
             public void onClick(View v) {
-                String emailaddress=email_edt.getText().toString();
-                String password=password_edt.getText().toString();
-                String reenter_password=reenter_password_edt.getText().toString();
+                String emailaddress = email_edt.getText().toString().trim();
+                String password = password_edt.getText().toString().trim();
+                String reenter_password = reenter_password_edt.getText().toString().trim();
 
                 if (emailaddress.isEmpty() || password.isEmpty() || reenter_password.isEmpty()) {
                     Toast.makeText(SignUp_PageActivity.this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
@@ -69,11 +70,11 @@ public class SignUp_PageActivity extends AppCompatActivity {
                 else{
                     otp_generater otpGenerater = new otp_generater();
                     String otp = otpGenerater.otpgenerater(SignUp_PageActivity.this);
-                    EmailHelper emailHelper = new EmailHelper();
-                    emailHelper.sendEmail(emailaddress, "OTP Verification For DTrade", "Your OTP is: " + otp, new EmailHelper.EmailCallback() {
+                    EmailHelper emailHelper = new EmailHelper(SignUp_PageActivity.this);
+                    emailHelper.sendEmail(emailaddress, otp, new EmailHelper.EmailCallback() {
                         @Override
-                        public void onSuccess() {
-                            Toast.makeText(SignUp_PageActivity.this, "OTP sent successfully", Toast.LENGTH_SHORT).show();
+                        public void onSuccess(String response) {
+                            Toast.makeText(SignUp_PageActivity.this, response, Toast.LENGTH_SHORT).show();
                             Intent intent = new Intent(SignUp_PageActivity.this, OtpVerificationActivity.class);
                             intent.putExtra("email", emailaddress);
                             intent.putExtra("password", password);
@@ -83,7 +84,7 @@ public class SignUp_PageActivity extends AppCompatActivity {
 
                         @Override
                         public void onFailure(Exception e) {
-                            Toast.makeText(SignUp_PageActivity.this, "Failed to send OTP: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                            Toast.makeText(SignUp_PageActivity.this, "Failed to send OTP: " + e.getMessage(), Toast.LENGTH_LONG).show();
                         }
                     });
                 }

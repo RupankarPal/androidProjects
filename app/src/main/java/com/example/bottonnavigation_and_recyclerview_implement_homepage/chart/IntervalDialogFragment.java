@@ -1,4 +1,4 @@
-package com.example.bottonnavigation_and_recyclerview_implement_homepage;
+package com.example.bottonnavigation_and_recyclerview_implement_homepage.chart;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -11,6 +11,7 @@ import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.bottonnavigation_and_recyclerview_implement_homepage.R;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 
 import java.util.Arrays;
@@ -24,13 +25,13 @@ public class IntervalDialogFragment extends BottomSheetDialogFragment {
 
     private IntervalListener listener;
     private static final List<String[]> INTERVALS = Arrays.asList(
-        new String[]{"5m", "5m", "1d"},
-        new String[]{"15m", "15m", "1d"},
-        new String[]{"30m", "30m", "1d"},
-        new String[]{"1h", "1h", "5d"},
-        new String[]{"1d", "1d", "1mo"},
-        new String[]{"1w", "1wk", "3mo"},
-        new String[]{"1mo", "1mo", "1y"}
+        new String[]{"5m", "5m", "1mo"},
+        new String[]{"15m", "15m", "2mo"},
+        new String[]{"30m", "30m", "3mo"},
+        new String[]{"1h", "1h", "6mo"},
+        new String[]{"1d", "1d", "1y"},
+        new String[]{"1w", "1wk", "2y"},
+        new String[]{"1mo", "1mo", "10y"}
     );
 
     public static IntervalDialogFragment newInstance(IntervalListener listener) {

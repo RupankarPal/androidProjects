@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    tools:context=".fragment_ButtomNavigation.watchlist"
+    tools:context=".fragment.fragment_ButtomNavigation.watchlist"
     android:id="@+id/watchlist">
 
    <androidx.constraintlayout.widget.ConstraintLayout

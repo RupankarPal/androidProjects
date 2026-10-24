@@ -1,4 +1,4 @@
-package com.example.bottonnavigation_and_recyclerview_implement_homepage;
+package com.example.bottonnavigation_and_recyclerview_implement_homepage.chart;
 
 import android.graphics.Color;
 import android.os.Bundle;
@@ -6,13 +6,17 @@ import android.os.Handler;
 import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
 
 import com.example.bottonnavigation_and_recyclerview_implement_homepage.Model.OHLC_Model;
+import com.example.bottonnavigation_and_recyclerview_implement_homepage.R;
 import com.example.bottonnavigation_and_recyclerview_implement_homepage.processing_packages.YahooStockDataFeatch;
 import com.example.bottonnavigation_and_recyclerview_implement_homepage.utils.FinancialUtils;
 import com.tradingview.lightweightcharts.api.chart.models.color.IntColor;
@@ -21,10 +25,10 @@ import com.tradingview.lightweightcharts.api.options.models.CandlestickSeriesOpt
 import com.tradingview.lightweightcharts.api.options.models.HistogramSeriesOptions;
 import com.tradingview.lightweightcharts.api.options.models.LineSeriesOptions;
 import com.tradingview.lightweightcharts.api.options.models.PriceScaleMargins;
-import com.tradingview.lightweightcharts.api.series.models.PriceFormat;
 import com.tradingview.lightweightcharts.api.series.enums.LineWidth;
 import com.tradingview.lightweightcharts.api.series.models.CandlestickData;
 import com.tradingview.lightweightcharts.api.series.models.HistogramData;
+import com.tradingview.lightweightcharts.api.series.models.PriceFormat;
 import com.tradingview.lightweightcharts.api.series.models.PriceScaleId;
 import com.tradingview.lightweightcharts.api.series.models.Time;
 import com.tradingview.lightweightcharts.view.ChartsView;
@@ -32,94 +36,93 @@ import com.tradingview.lightweightcharts.view.ChartsView;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 import kotlin.Unit;
 
-public class ChartActivity extends AppCompatActivity implements IntervalDialogFragment.IntervalListener, IndicatorDialogFragment.IndicatorListener, DrawingDialogFragment.DrawingToolListener {
+public class ChartFragment extends Fragment implements IntervalDialogFragment.IntervalListener, IndicatorDialogFragment.IndicatorListener, DrawingDialogFragment.DrawingToolListener {
 
     private ChartsView chartsView;
     private DrawingOverlayView drawingOverlay;
     private LinearLayout indicatorsContainer;
-    
+    private TextView intervalBtn;
+
     private SeriesApi candlestickSeries;
     private SeriesApi volumeSeries;
-    private Map<String, SeriesApi> activeIndicatorSeries = new HashMap<>();
+    private final Map<String, SeriesApi> activeIndicatorSeries = new HashMap<>();
 
-    private TextView stockNameTxt, priceTxt, changeTxt, intervalBtn;
-    private String symbol;
+    private String symbol = "RELIANCE.NS";
     private String currentInterval = "1d";
     private String currentRange = "12mo";
-    
-    private ArrayList<OHLC_Model> chartDataCache = new ArrayList<>();
-    private Handler handler = new Handler(Looper.getMainLooper());
+
+    private final ArrayList<OHLC_Model> chartDataCache = new ArrayList<>();
+    private final Handler handler = new Handler(Looper.getMainLooper());
     private Runnable updateRunnable;
 
+    public static ChartFragment newInstance(String symbol) {
+        ChartFragment fragment = new ChartFragment();
+        Bundle args = new Bundle();
+        args.putString("symbol", symbol);
+        fragment.setArguments(args);
+        return fragment;
+    }
+
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_chart);
+        if (getArguments() != null) {
+            symbol = getArguments().getString("symbol", "RELIANCE.NS");
+        }
+    }
 
-        symbol = getIntent().getStringExtra("symbol");
-        if (symbol == null) symbol = "RELIANCE.NS";
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_chart, container, false);
 
-        initViews();
+        chartsView = view.findViewById(R.id.chart_webview);
+        drawingOverlay = view.findViewById(R.id.drawing_overlay);
+        indicatorsContainer = view.findViewById(R.id.active_indicators_container);
+        intervalBtn = view.findViewById(R.id.btn_interval_selector);
+
+        intervalBtn.setOnClickListener(v -> {
+            if (getParentFragmentManager() != null) {
+                IntervalDialogFragment.newInstance(this).show(getParentFragmentManager(), "IntervalDialog");
+            }
+        });
+
+        view.findViewById(R.id.btn_indicators).setOnClickListener(v -> {
+            if (getParentFragmentManager() != null) {
+                IndicatorDialogFragment.newInstance(this).show(getParentFragmentManager(), "IndicatorDialog");
+            }
+        });
+
+        view.findViewById(R.id.btn_drawings).setOnClickListener(v -> {
+            if (getParentFragmentManager() != null) {
+                DrawingDialogFragment.newInstance(this).show(getParentFragmentManager(), "DrawingDialog");
+            }
+        });
+
         setupChart();
         fetchInitialData();
         startRealtimeUpdates();
-    }
 
-    private void initViews() {
-        chartsView = findViewById(R.id.chart_webview);
-        drawingOverlay = findViewById(R.id.drawing_overlay);
-        indicatorsContainer = findViewById(R.id.active_indicators_container);
-        
-        stockNameTxt = findViewById(R.id.chart_stock_name);
-        priceTxt = findViewById(R.id.chart_price_txt);
-        changeTxt = findViewById(R.id.chart_change_txt);
-        intervalBtn = findViewById(R.id.btn_interval_selector);
-
-        stockNameTxt.setText(symbol);
-
-        findViewById(R.id.chart_back_btn).setOnClickListener(v -> finish());
-        
-        findViewById(R.id.btn_interval_selector).setOnClickListener(v -> {
-            IntervalDialogFragment.newInstance(this).show(getSupportFragmentManager(), "IntervalDialog");
-        });
-        
-        findViewById(R.id.btn_indicators).setOnClickListener(v -> {
-            IndicatorDialogFragment.newInstance(this).show(getSupportFragmentManager(), "IndicatorDialog");
-        });
-        
-        findViewById(R.id.btn_drawings).setOnClickListener(v -> {
-            DrawingDialogFragment.newInstance(this).show(getSupportFragmentManager(), "DrawingDialog");
-        });
-
-        findViewById(R.id.chart_buy_btn).setOnClickListener(v -> {
-            BuySellDialogFragment dialog = BuySellDialogFragment.newInstance(symbol, priceTxt.getText().toString(), "0.00");
-            dialog.show(getSupportFragmentManager(), "BuySellDialog");
-        });
-
-        findViewById(R.id.chart_sell_btn).setOnClickListener(v -> {
-            BuySellDialogFragment dialog = BuySellDialogFragment.newInstance(symbol, priceTxt.getText().toString(), "0.00", "SELL", 0);
-            dialog.show(getSupportFragmentManager(), "BuySellDialog");
-        });
+        return view;
     }
 
     private void setupChart() {
-        // Main Price Series
+        if (chartsView == null) return;
+
         CandlestickSeriesOptions candleOptions = new CandlestickSeriesOptions();
         candleOptions.setScaleMargins(new PriceScaleMargins(0.1f, 0.3f));
         chartsView.getApi().addCandlestickSeries(
-            candleOptions,
-            series -> {
-                candlestickSeries = series;
-                return Unit.INSTANCE;
-            }
+                candleOptions,
+                series -> {
+                    candlestickSeries = series;
+                    return Unit.INSTANCE;
+                }
         );
 
-        // Volume Series (Hidden by default, shown if added)
         HistogramSeriesOptions volumeOptions = new HistogramSeriesOptions();
         volumeOptions.setPriceScaleId(new PriceScaleId(""));
         volumeOptions.setScaleMargins(new PriceScaleMargins(0.7f, 0.0f));
@@ -135,14 +138,14 @@ public class ChartActivity extends AppCompatActivity implements IntervalDialogFr
     public void onIntervalSelected(String label, String yahooInterval, String yahooRange) {
         currentInterval = yahooInterval;
         currentRange = yahooRange;
-        intervalBtn.setText(label);
+        if (intervalBtn != null) intervalBtn.setText(label);
         fetchInitialData();
     }
 
     @Override
     public void onIndicatorSelected(String name) {
         if (activeIndicatorSeries.containsKey(name)) {
-            Toast.makeText(this, name + " already added", Toast.LENGTH_SHORT).show();
+            if (getContext() != null) Toast.makeText(getContext(), name + " already added", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -163,24 +166,27 @@ public class ChartActivity extends AppCompatActivity implements IntervalDialogFr
         else if (name.contains("SMA")) color = Color.CYAN;
         else if (name.equals("VWAP")) color = Color.YELLOW;
         else color = Color.BLUE;
-        
+
         options.setColor(new IntColor(color));
         options.setLineWidth(LineWidth.TWO);
 
         final int finalColor = color;
         chartsView.getApi().addLineSeries(options, series -> {
             activeIndicatorSeries.put(name, series);
-            runOnUiThread(() -> addIndicatorLabel(name, finalColor));
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(() -> addIndicatorLabel(name, finalColor));
+            }
             updateChartNative(chartDataCache);
             return Unit.INSTANCE;
         });
     }
 
     private void addIndicatorLabel(String name, int color) {
-        View labelView = LayoutInflater.from(this).inflate(R.layout.item_active_indicator, indicatorsContainer, false);
+        if (getContext() == null || indicatorsContainer == null) return;
+        View labelView = LayoutInflater.from(getContext()).inflate(R.layout.item_active_indicator, indicatorsContainer, false);
         ((TextView) labelView.findViewById(R.id.indicator_label)).setText(name);
         ((TextView) labelView.findViewById(R.id.indicator_label)).setTextColor(color);
-        
+
         labelView.findViewById(R.id.btn_remove).setOnClickListener(v -> {
             if ("Volume".equals(name)) {
                 if (volumeSeries != null) {
@@ -199,12 +205,13 @@ public class ChartActivity extends AppCompatActivity implements IntervalDialogFr
             }
             indicatorsContainer.removeView(labelView);
         });
-        
+
         indicatorsContainer.addView(labelView);
     }
 
     @Override
     public void onToolSelected(String toolName) {
+        if (drawingOverlay == null) return;
         if ("Clear All".equals(toolName)) {
             drawingOverlay.clearAll();
             drawingOverlay.setMode(DrawingOverlayView.Mode.CURSOR);
@@ -218,40 +225,50 @@ public class ChartActivity extends AppCompatActivity implements IntervalDialogFr
     }
 
     private void fetchInitialData() {
-        YahooStockDataFeatch.fetchStockData(this, symbol, currentInterval, currentRange, new YahooStockDataFeatch.StockDataCallback() {
+        if (getContext() == null) return;
+        YahooStockDataFeatch.fetchStockData(getContext(), symbol, currentInterval, currentRange, new YahooStockDataFeatch.StockDataCallback() {
             @Override
             public void onSuccess(String symbol, ArrayList<OHLC_Model> ohlcList, String percent, String change) {
-                runOnUiThread(() -> {
-                    chartDataCache.clear();
-                    chartDataCache.addAll(ohlcList);
-                    updateChartNative(chartDataCache);
-                    fetchAccurateLabels();
-                });
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        chartDataCache.clear();
+                        chartDataCache.addAll(ohlcList);
+                        updateChartNative(chartDataCache);
+                        fetchAccurateLabels();
+                    });
+                }
             }
 
             @Override
             public void onFailure(String symbol, String error) {
-                runOnUiThread(() -> Toast.makeText(ChartActivity.this, "Error: " + error, Toast.LENGTH_SHORT).show());
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> Toast.makeText(getContext(), "Error: " + error, Toast.LENGTH_SHORT).show());
+                }
             }
         });
     }
 
     private void fetchAccurateLabels() {
-        YahooStockDataFeatch.fetchStockData(this, symbol, "1d", "2d", new YahooStockDataFeatch.StockDataCallback() {
+        if (getContext() == null) return;
+        YahooStockDataFeatch.fetchStockData(getContext(), symbol, "1d", "2d", new YahooStockDataFeatch.StockDataCallback() {
             @Override
             public void onSuccess(String symbol, ArrayList<OHLC_Model> ohlcList, String percent, String change) {
-                runOnUiThread(() -> {
-                    updateUI(ohlcList, percent, change);
-                    if (!ohlcList.isEmpty() && !chartDataCache.isEmpty()) {
-                        OHLC_Model latest = ohlcList.get(ohlcList.size() - 1);
-                        OHLC_Model cachedLast = chartDataCache.get(chartDataCache.size() - 1);
-                        if (latest.getTimestamp() >= cachedLast.getTimestamp()) {
-                            if (latest.getTimestamp() == cachedLast.getTimestamp()) chartDataCache.set(chartDataCache.size() - 1, latest);
-                            else chartDataCache.add(latest);
-                            updateChartNative(chartDataCache);
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        if (getActivity() instanceof ChartActivity) {
+                            ((ChartActivity) getActivity()).updateHeaderUI(ohlcList, percent, change);
                         }
-                    }
-                });
+                        if (!ohlcList.isEmpty() && !chartDataCache.isEmpty()) {
+                            OHLC_Model latest = ohlcList.get(ohlcList.size() - 1);
+                            OHLC_Model cachedLast = chartDataCache.get(chartDataCache.size() - 1);
+                            if (latest.getTimestamp() >= cachedLast.getTimestamp()) {
+                                if (latest.getTimestamp() == cachedLast.getTimestamp()) chartDataCache.set(chartDataCache.size() - 1, latest);
+                                else chartDataCache.add(latest);
+                                updateChartNative(chartDataCache);
+                            }
+                        }
+                    });
+                }
             }
             @Override public void onFailure(String symbol, String error) {}
         });
@@ -262,53 +279,33 @@ public class ChartActivity extends AppCompatActivity implements IntervalDialogFr
             @Override
             public void run() {
                 fetchAccurateLabels();
-                handler.postDelayed(this, 10000); 
+                handler.postDelayed(this, 10000);
             }
         };
         handler.postDelayed(updateRunnable, 10000);
     }
 
-    private void updateUI(ArrayList<OHLC_Model> ohlcList, String percent, String change) {
-        if (ohlcList == null || ohlcList.isEmpty()) return;
-        OHLC_Model latest = ohlcList.get(ohlcList.size() - 1);
-        priceTxt.setText(latest.getClose());
-        changeTxt.setText(String.format("%s (%s%%)", change, percent));
-        int color = getPriceColor(percent);
-        priceTxt.setTextColor(color);
-        changeTxt.setTextColor(color);
-    }
-
-    private int getPriceColor(String percent) {
-        try {
-            double p = Double.parseDouble(percent);
-            if (p > 0) return getResources().getColor(R.color.Green, null);
-            if (p < 0) return getResources().getColor(R.color.Red, null);
-        } catch (Exception ignored) {}
-        return Color.BLACK;
-    }
-
     private void updateChartNative(ArrayList<OHLC_Model> ohlcList) {
         if (ohlcList == null || ohlcList.isEmpty() || candlestickSeries == null) return;
-        
+
         List<CandlestickData> candleDataList = new ArrayList<>();
         List<HistogramData> volumeDataList = new ArrayList<>();
-        
+
         for (OHLC_Model model : ohlcList) {
             long time = model.getTimestamp();
             if (time == 0) continue;
-            
+
             float open = Float.parseFloat(model.getOpen());
             float close = Float.parseFloat(model.getClose());
 
             candleDataList.add(new CandlestickData(new Time.Utc(time), open, Float.parseFloat(model.getHigh()), Float.parseFloat(model.getLow()), close, null, null, null));
-            
+
             IntColor volColor = (close >= open) ? new IntColor(Color.argb(128, 0, 255, 0)) : new IntColor(Color.argb(128, 255, 0, 0));
             volumeDataList.add(new HistogramData(new Time.Utc(time), Float.parseFloat(model.getVolume()), volColor));
         }
         candlestickSeries.setData(candleDataList);
         if (volumeSeries != null) volumeSeries.setData(volumeDataList);
 
-        // Update Indicators
         for (Map.Entry<String, SeriesApi> entry : activeIndicatorSeries.entrySet()) {
             String name = entry.getKey();
             SeriesApi series = entry.getValue();
@@ -321,15 +318,14 @@ public class ChartActivity extends AppCompatActivity implements IntervalDialogFr
             } else if (name.equals("VWAP")) {
                 series.setData(FinancialUtils.calculateVWAP(ohlcList));
             } else if (name.equals("Bollinger Bands")) {
-                // Bollinger bands normally require 3 series, for simplicity we show the middle band here
                 series.setData(FinancialUtils.calculateBollingerBands(ohlcList, 20, 2.0).get(0));
             }
         }
     }
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
+    public void onDestroyView() {
+        super.onDestroyView();
         handler.removeCallbacks(updateRunnable);
     }
 }

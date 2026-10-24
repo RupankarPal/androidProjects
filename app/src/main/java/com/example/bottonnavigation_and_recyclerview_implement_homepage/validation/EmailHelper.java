@@ -1,80 +1,117 @@
 package com.example.bottonnavigation_and_recyclerview_implement_homepage.validation;
 
-import android.os.Handler;
-import android.os.Looper;
+import android.content.Context;
+import android.util.Log;
 
-import java.util.Properties;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import com.android.volley.AuthFailureError;
+import com.android.volley.DefaultRetryPolicy;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 
-import jakarta.mail.Authenticator;
-import jakarta.mail.Message;
-import jakarta.mail.MessagingException;
-import jakarta.mail.PasswordAuthentication;
-import jakarta.mail.Session;
-import jakarta.mail.Transport;
-import jakarta.mail.internet.InternetAddress;
-import jakarta.mail.internet.MimeMessage;
+import org.json.JSONObject;
+
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
 
 public class EmailHelper {
 
-    private final String senderEmail = "xyz@gmail.com"; // Replace with your Gmail
-    private final String appPassword = "pasword"; // Replace with 16-digit App Password
-    // Callback interface to update the UI later
+    private static final String API_URL = "https://stock-analysis-api-921311862826.asia-south1.run.app/otp";
+
+    private final RequestQueue requestQueue;
+
+    public EmailHelper(Context context) {
+        requestQueue = Volley.newRequestQueue(context.getApplicationContext());
+    }
+
     public interface EmailCallback {
-        void onSuccess();
+        void onSuccess(String response);
         void onFailure(Exception e);
     }
 
-    public void sendEmail(String recipientEmail, String subject, String messageBody, EmailCallback callback) {
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        Handler mainHandler = new Handler(Looper.getMainLooper()); // Used to push results back to main thread
-
-        executor.execute(() -> {
-            Properties prop = new Properties();
-            prop.put("mail.smtp.host", "smtp.gmail.com");
-            prop.put("mail.smtp.port", "465");
-            prop.put("mail.smtp.auth", "true");
-            prop.put("mail.smtp.socketFactory.port", "465");
-            prop.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
-            prop.put("mail.smtp.ssl.enable", "true");
-            prop.put("mail.debug", "true");
-
-            Session session = Session.getInstance(prop, new Authenticator() {
-                @Override
-                protected PasswordAuthentication getPasswordAuthentication() {
-                    return new PasswordAuthentication(senderEmail, appPassword);
-                }
-            });
-
-            try {
-                Message message = new MimeMessage(session);
-                message.setFrom(new InternetAddress(senderEmail));
-                message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(recipientEmail));
-                message.setSubject(subject);
-                message.setText(messageBody);
-
-                // Using explicit transport to catch connection/auth errors specifically
-                Transport transport = session.getTransport("smtp");
-                transport.connect("smtp.gmail.com", senderEmail, appPassword);
-                transport.sendMessage(message, message.getAllRecipients());
-                transport.close();
-
-                // Success: Notify main thread
-                mainHandler.post(callback::onSuccess);
-
-            } catch (MessagingException e) {
-                e.printStackTrace();
-                // Extract more descriptive error if possible
-                String errorMsg = e.getMessage();
-                if (errorMsg != null && errorMsg.contains("535")) {
-                    errorMsg = "Authentication Failed (Check App Password): " + errorMsg;
-                }
-                final String finalError = errorMsg;
-                // Failure: Notify main thread
-                mainHandler.post(() -> callback.onFailure(new Exception(finalError)));
+    public void sendEmail(String email_address, String otp, EmailCallback callback) {
+        try {
+            if (email_address == null || email_address.trim().isEmpty()) {
+                callback.onFailure(new Exception("Email address cannot be empty"));
+                return;
             }
-        });
+
+            String cleanEmail = email_address.trim();
+            String cleanOtp = otp != null ? otp.trim() : "";
+
+            JSONObject jsonBody = new JSONObject();
+            jsonBody.put("email", cleanEmail);
+            jsonBody.put("otp", cleanOtp);
+
+            final String requestBody = jsonBody.toString();
+
+            StringRequest stringRequest = new StringRequest(
+                    Request.Method.POST,
+                    API_URL,
+                    response -> {
+                        Log.d("EmailHelper", "Server Response: " + response);
+                        String cleanResponse = response != null ? response.replace("\"", "").trim() : "OTP SEND SUCCESSFULLY";
+                        callback.onSuccess(cleanResponse);
+                    },
+                    error -> {
+                        String errorMessage = "Network Error";
+                        if (error.networkResponse != null && error.networkResponse.data != null) {
+                            try {
+                                String responseData = new String(error.networkResponse.data, StandardCharsets.UTF_8);
+                                Log.e("EmailHelper", "Error Data: " + responseData);
+                                if (responseData.startsWith("{")) {
+                                    JSONObject errorJson = new JSONObject(responseData);
+                                    if (errorJson.has("detail")) {
+                                        errorMessage = errorJson.getString("detail");
+                                    } else if (errorJson.has("message")) {
+                                        errorMessage = errorJson.getString("message");
+                                    } else {
+                                        errorMessage = responseData;
+                                    }
+                                } else {
+                                    errorMessage = responseData.replace("\"", "").trim();
+                                }
+                            } catch (Exception ignored) {
+                                errorMessage = "HTTP " + error.networkResponse.statusCode + " Error";
+                            }
+                        } else if (error.getMessage() != null) {
+                            errorMessage = error.getMessage();
+                        } else {
+                            errorMessage = error.toString();
+                        }
+                        Log.e("EmailHelper", "Final Error Message: " + errorMessage);
+                        callback.onFailure(new Exception(errorMessage));
+                    }
+            ) {
+                @Override
+                public String getBodyContentType() {
+                    return "application/json; charset=utf-8";
+                }
+
+                @Override
+                public byte[] getBody() throws AuthFailureError {
+                    return requestBody.getBytes(StandardCharsets.UTF_8);
+                }
+
+                @Override
+                public Map<String, String> getHeaders() throws AuthFailureError {
+                    Map<String, String> headers = new HashMap<>();
+                    headers.put("Content-Type", "application/json");
+                    headers.put("User-Agent", "Mozilla/5.0");
+                    return headers;
+                }
+            };
+
+            stringRequest.setShouldCache(false);
+            // 30 seconds initial timeout with 0 retries to prevent duplicate attempts or premature timeout
+            stringRequest.setRetryPolicy(new DefaultRetryPolicy(30000, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+            requestQueue.add(stringRequest);
+
+        } catch (Exception e) {
+            callback.onFailure(e);
+        }
     }
 
 }

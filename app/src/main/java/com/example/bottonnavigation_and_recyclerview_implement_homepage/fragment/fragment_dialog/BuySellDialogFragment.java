@@ -1,4 +1,4 @@
-package com.example.bottonnavigation_and_recyclerview_implement_homepage;
+package com.example.bottonnavigation_and_recyclerview_implement_homepage.fragment.fragment_dialog;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -21,10 +21,12 @@ import android.widget.AdapterView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 
 import com.example.bottonnavigation_and_recyclerview_implement_homepage.DatabaseClasses.FundDatabase;
 import com.example.bottonnavigation_and_recyclerview_implement_homepage.DatabaseClasses.OrdersDatabaseHelper;
 import com.example.bottonnavigation_and_recyclerview_implement_homepage.Model.Order_model;
+import com.example.bottonnavigation_and_recyclerview_implement_homepage.R;
 import com.example.bottonnavigation_and_recyclerview_implement_homepage.utils.MarketTimeManager;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 
@@ -228,35 +230,37 @@ public class BuySellDialogFragment extends BottomSheetDialogFragment {
             FundDatabase fdb = new FundDatabase(ctx);
             balance = fdb.getBalance();
             new Handler(Looper.getMainLooper()).post(() -> {
-                if (balance_txt != null) balance_txt.setText(String.format(Locale.getDefault(), "%.2f", balance));
+                if (isAdded() && balance_txt != null) balance_txt.setText(String.format(Locale.getDefault(), "%.2f", balance));
             });
         });
         
         setMarketOrderMode();
         
-            // Setup initial UI based on tradeSide and productType
-            if (tradeSide.equalsIgnoreCase("SELL")) {
-                sell_side_btn.setBackgroundTintList(android.content.res.ColorStateList.valueOf(getResources().getColor(R.color.Red, null)));
-                sell_side_btn.setTextColor(getResources().getColor(R.color.white, null));
-                buy_side_btn.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFF5F5F5));
-                buy_side_btn.setTextColor(getResources().getColor(R.color.black, null));
-            } else {
-                buy_side_btn.setBackgroundTintList(android.content.res.ColorStateList.valueOf(getResources().getColor(R.color.Green, null)));
-                buy_side_btn.setTextColor(getResources().getColor(R.color.white, null));
-                sell_side_btn.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFF5F5F5));
-                sell_side_btn.setTextColor(getResources().getColor(R.color.black, null));
-            }
+            Context ctx = getContext();
+            if (ctx != null && isAdded()) {
+                if (tradeSide.equalsIgnoreCase("SELL")) {
+                    sell_side_btn.setBackgroundTintList(android.content.res.ColorStateList.valueOf(ContextCompat.getColor(ctx, R.color.Red)));
+                    sell_side_btn.setTextColor(ContextCompat.getColor(ctx, R.color.white));
+                    buy_side_btn.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFF5F5F5));
+                    buy_side_btn.setTextColor(ContextCompat.getColor(ctx, R.color.black));
+                } else {
+                    buy_side_btn.setBackgroundTintList(android.content.res.ColorStateList.valueOf(ContextCompat.getColor(ctx, R.color.Green)));
+                    buy_side_btn.setTextColor(ContextCompat.getColor(ctx, R.color.white));
+                    sell_side_btn.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFF5F5F5));
+                    sell_side_btn.setTextColor(ContextCompat.getColor(ctx, R.color.black));
+                }
 
-            if (productType.equalsIgnoreCase("INTRADAY")) {
-                intraday_btn.setBackgroundTintList(android.content.res.ColorStateList.valueOf(getResources().getColor(R.color.violet, null)));
-                intraday_btn.setTextColor(getResources().getColor(R.color.white, null));
-                delivery_btn.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFF5F5F5));
-                delivery_btn.setTextColor(getResources().getColor(R.color.black, null));
-            } else {
-                delivery_btn.setBackgroundTintList(android.content.res.ColorStateList.valueOf(getResources().getColor(R.color.violet, null)));
-                delivery_btn.setTextColor(getResources().getColor(R.color.white, null));
-                intraday_btn.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFF5F5F5));
-                intraday_btn.setTextColor(getResources().getColor(R.color.black, null));
+                if (productType.equalsIgnoreCase("INTRADAY")) {
+                    intraday_btn.setBackgroundTintList(android.content.res.ColorStateList.valueOf(ContextCompat.getColor(ctx, R.color.violet)));
+                    intraday_btn.setTextColor(ContextCompat.getColor(ctx, R.color.white));
+                    delivery_btn.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFF5F5F5));
+                    delivery_btn.setTextColor(ContextCompat.getColor(ctx, R.color.black));
+                } else {
+                    delivery_btn.setBackgroundTintList(android.content.res.ColorStateList.valueOf(ContextCompat.getColor(ctx, R.color.violet)));
+                    delivery_btn.setTextColor(ContextCompat.getColor(ctx, R.color.white));
+                    intraday_btn.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFF5F5F5));
+                    intraday_btn.setTextColor(ContextCompat.getColor(ctx, R.color.black));
+                }
             }
 
         if (orderId != -1 && getArguments() != null) {
@@ -288,7 +292,7 @@ public class BuySellDialogFragment extends BottomSheetDialogFragment {
 
         if (availableQty > 0 && !tradeSide.equalsIgnoreCase("SELL")) {
              new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                 if (getContext() != null) Toast.makeText(getContext(), "You already hold: " + availableQty, Toast.LENGTH_SHORT).show();
+                 if (isAdded() && getContext() != null) Toast.makeText(getContext(), "You already hold: " + availableQty, Toast.LENGTH_SHORT).show();
              }, 1000);
         }
     }
@@ -297,27 +301,33 @@ public class BuySellDialogFragment extends BottomSheetDialogFragment {
         updateRunnable = new Runnable() {
             @Override
             public void run() {
-                if (getContext() == null) return;
+                if (!isAdded() || getContext() == null) return;
                 com.example.bottonnavigation_and_recyclerview_implement_homepage.processing_packages.YahooStockDataFeatch.fetchStockData(getContext(), symbol, new com.example.bottonnavigation_and_recyclerview_implement_homepage.processing_packages.YahooStockDataFeatch.StockDataCallback() {
                     @Override
                     public void onSuccess(String symbol, java.util.ArrayList<com.example.bottonnavigation_and_recyclerview_implement_homepage.Model.OHLC_Model> ohlcList, String percent, String change) {
+                        if (!isAdded() || getContext() == null) return;
                         if (ohlcList != null && !ohlcList.isEmpty()) {
                             com.example.bottonnavigation_and_recyclerview_implement_homepage.Model.OHLC_Model data = ohlcList.get(ohlcList.size() - 1);
                             String price = data.getClose();
                             new Handler(Looper.getMainLooper()).post(() -> {
-                                updateUIWithPrice(price, percent, change); 
+                                if (isAdded() && getContext() != null) {
+                                    updateUIWithPrice(price, percent, change); 
+                                }
                             });
                         }
                     }
                     @Override public void onFailure(String symbol, String error) {}
                 });
-                updateHandler.postDelayed(this, 1500); // Fast price updates
+                if (isAdded() && getContext() != null) {
+                    updateHandler.postDelayed(this, 1500); // Fast price updates
+                }
             }
         };
         updateHandler.post(updateRunnable);
     }
 
     private void updateUIWithPrice(String price, String percent, String change) {
+        if (!isAdded() || getContext() == null) return;
         if (stockPrice != null) stockPrice.setText(price);
         if (stockChangeInPercent != null) stockChangeInPercent.setText(String.format("(%s%%)", percent));
         if (todayChange_txt != null) todayChange_txt.setText(change);
@@ -332,18 +342,42 @@ public class BuySellDialogFragment extends BottomSheetDialogFragment {
     }
 
     private int colorCoding(String percent) {
+        if (!isAdded() || getContext() == null) return android.graphics.Color.BLACK;
         double p = parseDoubleSafe(percent);
-        if (p > 0) return getResources().getColor(R.color.Green, null);
-        if (p < 0) return getResources().getColor(R.color.Red, null);
-        return getResources().getColor(R.color.black, null);
+        if (p > 0) return ContextCompat.getColor(getContext(), R.color.Green);
+        if (p < 0) return ContextCompat.getColor(getContext(), R.color.Red);
+        return ContextCompat.getColor(getContext(), R.color.black);
+    }
+
+    private void stopPriceUpdates() {
+        if (updateHandler != null && updateRunnable != null) {
+            updateHandler.removeCallbacks(updateRunnable);
+            updateHandler.removeCallbacksAndMessages(null);
+        }
+    }
+
+    @Override
+    public void onDestroyView() {
+        stopPriceUpdates();
+        super.onDestroyView();
+    }
+
+    @Override
+    public void onDismiss(@NonNull android.content.DialogInterface dialog) {
+        stopPriceUpdates();
+        super.onDismiss(dialog);
+    }
+
+    @Override
+    public void onStop() {
+        stopPriceUpdates();
+        super.onStop();
     }
 
     @Override
     public void onDestroy() {
+        stopPriceUpdates();
         super.onDestroy();
-        if (updateHandler != null && updateRunnable != null) {
-            updateHandler.removeCallbacks(updateRunnable);
-        }
     }
 
     private void setupListeners() {
@@ -363,7 +397,7 @@ public class BuySellDialogFragment extends BottomSheetDialogFragment {
             });
         }
 
-        if (order_type_spinner != null) {
+        if (order_type_spinner != null && getContext() != null) {
             String[] options = {"Market", "Limit"};
             ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, options);
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -379,38 +413,46 @@ public class BuySellDialogFragment extends BottomSheetDialogFragment {
         }
 
         if (delivery_btn != null) delivery_btn.setOnClickListener(v -> {
+            Context ctx = getContext();
+            if (ctx == null || !isAdded()) return;
             productType = "DELIVERY";
-            delivery_btn.setBackgroundTintList(android.content.res.ColorStateList.valueOf(getResources().getColor(R.color.violet, null)));
-            delivery_btn.setTextColor(getResources().getColor(R.color.white, null));
+            delivery_btn.setBackgroundTintList(android.content.res.ColorStateList.valueOf(ContextCompat.getColor(ctx, R.color.violet)));
+            delivery_btn.setTextColor(ContextCompat.getColor(ctx, R.color.white));
             intraday_btn.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFF5F5F5));
-            intraday_btn.setTextColor(getResources().getColor(R.color.black, null));
+            intraday_btn.setTextColor(ContextCompat.getColor(ctx, R.color.black));
             updateReviewButton();
         });
 
         if (intraday_btn != null) intraday_btn.setOnClickListener(v -> {
+            Context ctx = getContext();
+            if (ctx == null || !isAdded()) return;
             productType = "INTRADAY";
-            intraday_btn.setBackgroundTintList(android.content.res.ColorStateList.valueOf(getResources().getColor(R.color.violet, null)));
-            intraday_btn.setTextColor(getResources().getColor(R.color.white, null));
+            intraday_btn.setBackgroundTintList(android.content.res.ColorStateList.valueOf(ContextCompat.getColor(ctx, R.color.violet)));
+            intraday_btn.setTextColor(ContextCompat.getColor(ctx, R.color.white));
             delivery_btn.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFF5F5F5));
-            delivery_btn.setTextColor(getResources().getColor(R.color.black, null));
+            delivery_btn.setTextColor(ContextCompat.getColor(ctx, R.color.black));
             updateReviewButton();
         });
 
         if (buy_side_btn != null) buy_side_btn.setOnClickListener(v -> {
+            Context ctx = getContext();
+            if (ctx == null || !isAdded()) return;
             tradeSide = "BUY";
-            buy_side_btn.setBackgroundTintList(android.content.res.ColorStateList.valueOf(getResources().getColor(R.color.Green, null)));
-            buy_side_btn.setTextColor(getResources().getColor(R.color.white, null));
+            buy_side_btn.setBackgroundTintList(android.content.res.ColorStateList.valueOf(ContextCompat.getColor(ctx, R.color.Green)));
+            buy_side_btn.setTextColor(ContextCompat.getColor(ctx, R.color.white));
             sell_side_btn.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFF5F5F5));
-            sell_side_btn.setTextColor(getResources().getColor(R.color.black, null));
+            sell_side_btn.setTextColor(ContextCompat.getColor(ctx, R.color.black));
             updateReviewButton();
         });
 
         if (sell_side_btn != null) sell_side_btn.setOnClickListener(v -> {
+            Context ctx = getContext();
+            if (ctx == null || !isAdded()) return;
             tradeSide = "SELL";
-            sell_side_btn.setBackgroundTintList(android.content.res.ColorStateList.valueOf(getResources().getColor(R.color.Red, null)));
-            sell_side_btn.setTextColor(getResources().getColor(R.color.white, null));
+            sell_side_btn.setBackgroundTintList(android.content.res.ColorStateList.valueOf(ContextCompat.getColor(ctx, R.color.Red)));
+            sell_side_btn.setTextColor(ContextCompat.getColor(ctx, R.color.white));
             buy_side_btn.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFF5F5F5));
-            buy_side_btn.setTextColor(getResources().getColor(R.color.black, null));
+            buy_side_btn.setTextColor(ContextCompat.getColor(ctx, R.color.black));
             updateReviewButton();
         });
 
@@ -421,6 +463,7 @@ public class BuySellDialogFragment extends BottomSheetDialogFragment {
     }
 
     private void updateReviewButton() {
+        if (!isAdded() || getContext() == null) return;
         double q = parseDoubleSafe(Qedt != null ? Qedt.getText().toString() : "0");
         double p = orderType == 1 ? parseDoubleSafe(currentPriceStr) : parseDoubleSafe(Pedt != null ? Pedt.getText().toString() : "0");
         double total = q * p;
@@ -435,14 +478,14 @@ public class BuySellDialogFragment extends BottomSheetDialogFragment {
 
         if (total_cost_txt != null) total_cost_txt.setText(String.format(Locale.getDefault(), "%.2f", requiredMargin));
 
-        if (review_order_btn != null) {
+        if (review_order_btn != null && getContext() != null) {
             String text = (tradeSide.equals("BUY") ? "Review buy order" : "Review sell order");
             review_order_btn.setText(text);
-            review_order_btn.setBackgroundTintList(android.content.res.ColorStateList.valueOf(getResources().getColor(tradeSide.equals("BUY") ? R.color.Green : R.color.Red, null)));
+            review_order_btn.setBackgroundTintList(android.content.res.ColorStateList.valueOf(ContextCompat.getColor(getContext(), tradeSide.equals("BUY") ? R.color.Green : R.color.Red)));
         }
         
-        if (balance_txt != null) {
-            balance_txt.setTextColor(tradeSide.equals("BUY") && requiredMargin > balance ? getResources().getColor(R.color.Red, null) : getResources().getColor(R.color.black, null));
+        if (balance_txt != null && getContext() != null) {
+            balance_txt.setTextColor(tradeSide.equals("BUY") && requiredMargin > balance ? ContextCompat.getColor(getContext(), R.color.Red) : ContextCompat.getColor(getContext(), R.color.black));
         }
     }
 
@@ -456,26 +499,33 @@ public class BuySellDialogFragment extends BottomSheetDialogFragment {
     }
 
     private void handleTrade(String type) {
+        Context context = getContext();
+        if (context == null || !isAdded()) return;
+
         MarketTimeManager.MarketType marketType = MarketTimeManager.getMarketType(symbol);
         if (!MarketTimeManager.isMarketOpen(marketType)) {
-            Toast.makeText(getContext(), "Market is currently closed for " + symbol, Toast.LENGTH_LONG).show();
+            Toast.makeText(context, "Market is currently closed for " + symbol, Toast.LENGTH_LONG).show();
+            if (review_order_btn != null) review_order_btn.setEnabled(true);
             return;
         }
 
         double q = parseDoubleSafe(Qedt != null ? Qedt.getText().toString() : "0");
         if (marketType == MarketTimeManager.MarketType.INDIAN && q != Math.floor(q)) {
-            Toast.makeText(getContext(), "Indian shares only allow whole numbers", Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, "Indian shares only allow whole numbers", Toast.LENGTH_SHORT).show();
+            if (review_order_btn != null) review_order_btn.setEnabled(true);
             return;
         }
 
         if (q <= 0) {
-            Toast.makeText(getContext(), "Enter valid quantity", Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, "Enter valid quantity", Toast.LENGTH_SHORT).show();
+            if (review_order_btn != null) review_order_btn.setEnabled(true);
             return;
         }
 
         if (type.equals("SELL")) {
             if (productType.equals("DELIVERY") && q > availableQty) {
-                Toast.makeText(getContext(), "Cannot sell in Delivery if not owned. Available: " + availableQty, Toast.LENGTH_LONG).show();
+                Toast.makeText(context, "Cannot sell in Delivery if not owned. Available: " + availableQty, Toast.LENGTH_LONG).show();
+                if (review_order_btn != null) review_order_btn.setEnabled(true);
                 return;
             }
         }
@@ -486,19 +536,20 @@ public class BuySellDialogFragment extends BottomSheetDialogFragment {
 
         // Balance check considering the money already blocked by the old order
         if (type.equals("BUY") && requiredMargin > (balance + oldMargin)) {
-            Toast.makeText(getContext(), "Insufficient balance. Required: " + String.format(Locale.getDefault(), "%.2f", requiredMargin), Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, "Insufficient balance. Required: " + String.format(Locale.getDefault(), "%.2f", requiredMargin), Toast.LENGTH_SHORT).show();
+            if (review_order_btn != null) review_order_btn.setEnabled(true);
             return;
         }
 
         dbExecutor.execute(() -> {
-            Context context = getContext();
-            if (context == null) return;
+            Context ctx = getContext();
+            if (ctx == null) return;
             
             OrdersDatabaseHelper odb = null;
             FundDatabase fdb = null;
             try {
-                odb = new OrdersDatabaseHelper(context);
-                fdb = new FundDatabase(context);
+                odb = new OrdersDatabaseHelper(ctx);
+                fdb = new FundDatabase(ctx);
                 
                 Calendar cal = Calendar.getInstance();
                 String date = cal.get(Calendar.DAY_OF_MONTH) + "/" + (cal.get(Calendar.MONTH) + 1) + "/" + cal.get(Calendar.YEAR);
@@ -545,12 +596,12 @@ public class BuySellDialogFragment extends BottomSheetDialogFragment {
                 OneTimeWorkRequest workRequest = new OneTimeWorkRequest.Builder(OrderWorker.class)
                         .setInitialDelay(100, TimeUnit.MILLISECONDS)
                         .build();
-                WorkManager.getInstance(context).enqueue(workRequest);
+                WorkManager.getInstance(ctx).enqueue(workRequest);
 
                 // EXTRA: For Market orders, trigger matching engine logic immediately in this background thread
                 if (orderType == 1) { // 1 = MARKET
                     com.example.bottonnavigation_and_recyclerview_implement_homepage.processing_packages.order_process process = 
-                        new com.example.bottonnavigation_and_recyclerview_implement_homepage.processing_packages.order_process(context);
+                        new com.example.bottonnavigation_and_recyclerview_implement_homepage.processing_packages.order_process(ctx);
                     process.matchPendingOrders();
                 }
 
@@ -565,7 +616,7 @@ public class BuySellDialogFragment extends BottomSheetDialogFragment {
                 Log.e("TRADING_ERROR", "Trade failed: " + e.getMessage());
                 new Handler(Looper.getMainLooper()).post(() -> {
                     if (isAdded() && getActivity() != null) {
-                        review_order_btn.setEnabled(true);
+                        if (review_order_btn != null) review_order_btn.setEnabled(true);
                         Toast.makeText(getActivity(), "Trade execution failed", Toast.LENGTH_SHORT).show();
                         dismissAllowingStateLoss();
                     }

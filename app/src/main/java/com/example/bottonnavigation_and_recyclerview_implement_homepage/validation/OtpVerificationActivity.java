@@ -55,16 +55,18 @@ public class OtpVerificationActivity extends AppCompatActivity {
             String enteredOtp = otpInput.getText().toString().trim();
             
             if (otp_generater.verifyOtp(this, enteredOtp)) {
+
                 if ("SIGNUP".equals(mode)) {
                     // Create account after OTP verified
                     mAuth.createUserWithEmailAndPassword(userEmail, userPassword).addOnCompleteListener(task -> {
                         if (task.isSuccessful()) {
                             Toast.makeText(this, "Account Created Successfully", Toast.LENGTH_SHORT).show();
-                            navigateToMain();
+                            navigateToMain(); // move main activity
                         } else {
                             Toast.makeText(this, "Signup Failed: " + (task.getException() != null ? task.getException().getMessage() : "Unknown"), Toast.LENGTH_LONG).show();
                         }
                     });
+
                 } else {
                     Toast.makeText(this, "Verification Successful", Toast.LENGTH_SHORT).show();
                     navigateToMain();
@@ -76,11 +78,11 @@ public class OtpVerificationActivity extends AppCompatActivity {
 
         resendTxt.setOnClickListener(v -> {
             String otp = otp_generater.otpgenerater(this);
-            EmailHelper emailHelper= new EmailHelper();
-            emailHelper.sendEmail(userEmail, "OTP Verification For DTrade", "Your OTP is: " + otp, new EmailHelper.EmailCallback() {
+            EmailHelper emailHelper = new EmailHelper(this);
+            emailHelper.sendEmail(userEmail, otp, new EmailHelper.EmailCallback() {
                 @Override
-                public void onSuccess() {
-                    Toast.makeText(OtpVerificationActivity.this, "OTP sent successfully", Toast.LENGTH_SHORT).show();
+                public void onSuccess(String response) {
+                    Toast.makeText(OtpVerificationActivity.this, response, Toast.LENGTH_SHORT).show();
                     startOtpTimer(); // Restart timer on resend
                 }
 

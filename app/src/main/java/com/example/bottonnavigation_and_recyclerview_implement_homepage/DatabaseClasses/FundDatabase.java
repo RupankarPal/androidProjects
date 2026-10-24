@@ -9,7 +9,6 @@ import android.database.sqlite.SQLiteOpenHelper;
 import java.util.ArrayList;
 import java.util.Locale;
 import com.example.bottonnavigation_and_recyclerview_implement_homepage.Model.TradeHistoryModel;
-
 import com.example.bottonnavigation_and_recyclerview_implement_homepage.Model.portfolio_stocks_model;
 
 public class FundDatabase extends SQLiteOpenHelper {
@@ -97,9 +96,10 @@ public class FundDatabase extends SQLiteOpenHelper {
         }
     }
 
-    public void useFund(double amount, String date) {
+    public void useFund(String currency, double amount, String date) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
+        values.put(COL_CURRENCY, currency);
         values.put(COL_TYPE, "use");
         values.put(COL_AMOUNT, amount);
         values.put(COL_DATE, date);
@@ -110,9 +110,40 @@ public class FundDatabase extends SQLiteOpenHelper {
         }
     }
 
+    public void useFund(double amount, String date) {
+        useFund("USD", amount, date);
+    }
+
+    public void convertCurrency(String fromCurrency, String toCurrency, double fromAmount, double toAmount, String date) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        try {
+            // Deduct from source currency
+            ContentValues useValues = new ContentValues();
+            useValues.put(COL_CURRENCY, fromCurrency);
+            useValues.put(COL_TYPE, "use");
+            useValues.put(COL_AMOUNT, fromAmount);
+            useValues.put(COL_DATE, date);
+            db.insert(TABLE_FUNDS, null, useValues);
+
+            // Add to destination currency
+            ContentValues addValues = new ContentValues();
+            addValues.put(COL_CURRENCY, toCurrency);
+            addValues.put(COL_TYPE, "add");
+            addValues.put(COL_AMOUNT, toAmount);
+            addValues.put(COL_DATE, date);
+            db.insert(TABLE_FUNDS, null, addValues);
+        } finally {
+            db.close();
+        }
+    }
+
     public double getBalance() {
+        return getUsdBalance();
+    }
+
+    public double getInrBalance() {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT SUM(CASE WHEN type='add' THEN " + COL_AMOUNT + " ELSE -" + COL_AMOUNT + " END) FROM " + TABLE_FUNDS, null);
+        Cursor cursor = db.rawQuery("SELECT SUM(CASE WHEN type='add' THEN " + COL_AMOUNT + " ELSE -" + COL_AMOUNT + " END) FROM " + TABLE_FUNDS + " WHERE " + COL_CURRENCY + "='INR'", null);
         double balance = 0;
         try {
             if (cursor != null && cursor.moveToFirst()) {
@@ -122,7 +153,22 @@ public class FundDatabase extends SQLiteOpenHelper {
         } finally {
             db.close();
         }
-        return balance;
+        return Math.max(0, balance);
+    }
+
+    public double getUsdBalance() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT SUM(CASE WHEN type='add' THEN " + COL_AMOUNT + " ELSE -" + COL_AMOUNT + " END) FROM " + TABLE_FUNDS + " WHERE (" + COL_CURRENCY + "='USD' OR " + COL_CURRENCY + " IS NULL OR " + COL_CURRENCY + "='')", null);
+        double balance = 0;
+        try {
+            if (cursor != null && cursor.moveToFirst()) {
+                balance = cursor.getDouble(0);
+                cursor.close();
+            }
+        } finally {
+            db.close();
+        }
+        return Math.max(0, balance);
     }
 
     public void addStockToPortfolio(String stockName, double stockPrice, double quantity, String date, String productType) {
@@ -215,7 +261,7 @@ public class FundDatabase extends SQLiteOpenHelper {
 
     private void addFundInternal(SQLiteDatabase db, String currency, double amount, String date) {
         ContentValues values = new ContentValues();
-        values.put(COL_CURRENCY, currency);
+        values.put(COL_CURRENCY, currency != null ? currency : "USD");
         values.put(COL_TYPE, "add");
         values.put(COL_AMOUNT, amount);
         values.put(COL_DATE, date);

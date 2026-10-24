@@ -22,14 +22,13 @@ import com.example.bottonnavigation_and_recyclerview_implement_homepage.Database
 import com.example.bottonnavigation_and_recyclerview_implement_homepage.Model.Order_model;
 import com.example.bottonnavigation_and_recyclerview_implement_homepage.validation.SecurityManager;
 import com.example.bottonnavigation_and_recyclerview_implement_homepage.validation.loginPage;
-import com.example.bottonnavigation_and_recyclerview_implement_homepage.fragment_ButtomNavigation.My_acount;
-import com.example.bottonnavigation_and_recyclerview_implement_homepage.fragment_ButtomNavigation.Portfolio;
-import com.example.bottonnavigation_and_recyclerview_implement_homepage.fragment_ButtomNavigation.watchlist;
-import com.example.bottonnavigation_and_recyclerview_implement_homepage.fragment_ButtomNavigation.odders;
+import com.example.bottonnavigation_and_recyclerview_implement_homepage.fragment.fragment_ButtomNavigation.My_acount;
+import com.example.bottonnavigation_and_recyclerview_implement_homepage.fragment.fragment_ButtomNavigation.Portfolio;
+import com.example.bottonnavigation_and_recyclerview_implement_homepage.fragment.fragment_ButtomNavigation.watchlist;
+import com.example.bottonnavigation_and_recyclerview_implement_homepage.fragment.fragment_ButtomNavigation.odders;
 import com.example.bottonnavigation_and_recyclerview_implement_homepage.processing_packages.DailyCleanupWorker;
 import com.example.bottonnavigation_and_recyclerview_implement_homepage.processing_packages.SquareOffWorker;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
-
 
 import java.util.ArrayList;
 
@@ -45,7 +44,6 @@ public class MainActivity extends AppCompatActivity implements PaymentResultWith
     ConstraintLayout container;
     private boolean doubleBackToExitPressedOnce = false;
     private String url;
-    private FirebaseAuth mAuth;
     private boolean isAuthVerified = false;
 
     @Override
@@ -108,9 +106,7 @@ public class MainActivity extends AppCompatActivity implements PaymentResultWith
 
         Checkout.preload(getApplicationContext());
 
-        mAuth = FirebaseAuth.getInstance();
-        FirebaseUser currentUser = mAuth.getCurrentUser();
-
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser == null) {
             // Not logged in, redirect to Login
             startActivity(new Intent(this, loginPage.class));

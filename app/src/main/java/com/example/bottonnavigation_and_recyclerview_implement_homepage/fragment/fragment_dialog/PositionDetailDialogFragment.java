@@ -1,4 +1,4 @@
-package com.example.bottonnavigation_and_recyclerview_implement_homepage;
+package com.example.bottonnavigation_and_recyclerview_implement_homepage.fragment.fragment_dialog;
 
 import android.graphics.Color;
 import android.os.Bundle;
@@ -12,6 +12,7 @@ import androidx.annotation.Nullable;
 
 import com.example.bottonnavigation_and_recyclerview_implement_homepage.Model.OHLC_Model;
 import com.example.bottonnavigation_and_recyclerview_implement_homepage.Model.portfolio_stocks_model;
+import com.example.bottonnavigation_and_recyclerview_implement_homepage.R;
 import com.example.bottonnavigation_and_recyclerview_implement_homepage.processing_packages.YahooStockDataFeatch;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.tradingview.lightweightcharts.api.interfaces.SeriesApi;
@@ -34,7 +35,6 @@ import com.example.bottonnavigation_and_recyclerview_implement_homepage.utils.Fi
 import com.tradingview.lightweightcharts.api.chart.models.color.IntColor;
 import com.tradingview.lightweightcharts.api.options.models.LineSeriesOptions;
 import com.tradingview.lightweightcharts.api.series.enums.LineWidth;
-import com.tradingview.lightweightcharts.api.series.models.LineData;
 
 public class PositionDetailDialogFragment extends BottomSheetDialogFragment {
 
@@ -44,7 +44,7 @@ public class PositionDetailDialogFragment extends BottomSheetDialogFragment {
     private SeriesApi volumeSeries;
     private SeriesApi ema20Series, ema50Series, ema100Series, ema200Series;
     private TextView symbolTxt, priceTxt, changeTxt, qtyTxt, avgTxt, plTxt;
-    private ArrayList<OHLC_Model> chartDataCache = new ArrayList<>();
+    private final ArrayList<OHLC_Model> chartDataCache = new ArrayList<>();
 
     public static PositionDetailDialogFragment newInstance(portfolio_stocks_model model) {
         PositionDetailDialogFragment fragment = new PositionDetailDialogFragment();
@@ -81,30 +81,33 @@ public class PositionDetailDialogFragment extends BottomSheetDialogFragment {
         plTxt = view.findViewById(R.id.detail_pl_txt);
         chartsView = view.findViewById(R.id.detail_chart_webview);
 
-        symbolTxt.setText(stockModel.getStocks_name());
-        priceTxt.setText(stockModel.getStocks_price());
-        changeTxt.setText(stockModel.getDaily_change());
-        qtyTxt.setText(stockModel.getStocks_quantity());
-        avgTxt.setText(stockModel.getPercheasing_price());
-        plTxt.setText(stockModel.getPl_amount() + " (" + stockModel.getPercentage_change() + ")");
+        if (stockModel != null) {
+            symbolTxt.setText(stockModel.getStocks_name());
+            priceTxt.setText(stockModel.getStocks_price());
+            changeTxt.setText(stockModel.getDaily_change());
+            qtyTxt.setText(stockModel.getStocks_quantity());
+            avgTxt.setText(stockModel.getPercheasing_price());
+            plTxt.setText(String.format("%s (%s)", stockModel.getPl_amount(), stockModel.getPercentage_change()));
 
-        double pl = parseDoubleSafe(stockModel.getPl_amount());
-        plTxt.setTextColor(pl >= 0 ? Color.parseColor("#0F9715") : Color.RED);
+            double pl = parseDoubleSafe(stockModel.getPl_amount());
+            plTxt.setTextColor(pl >= 0 ? Color.parseColor("#0F9715") : Color.RED);
 
-        view.findViewById(R.id.detail_add_more_btn).setOnClickListener(v -> {
-            BuySellDialogFragment dialog = BuySellDialogFragment.newInstance(stockModel.getStocks_name(), stockModel.getStocks_price(), stockModel.getDaily_change(), "BUY", 0);
-            dialog.show(getParentFragmentManager(), "BuySellDialog");
-            dismiss();
-        });
+            view.findViewById(R.id.detail_add_more_btn).setOnClickListener(v -> {
+                BuySellDialogFragment dialog = BuySellDialogFragment.newInstance(stockModel.getStocks_name(), stockModel.getStocks_price(), stockModel.getDaily_change(), "BUY", 0);
+                dialog.show(getParentFragmentManager(), "BuySellDialog");
+                dismiss();
+            });
 
-        view.findViewById(R.id.detail_sell_btn).setOnClickListener(v -> {
-            BuySellDialogFragment dialog = BuySellDialogFragment.newInstance(stockModel.getStocks_name(), stockModel.getStocks_price(), stockModel.getDaily_change(), "SELL", parseDoubleSafe(stockModel.getStocks_quantity()));
-            dialog.show(getParentFragmentManager(), "BuySellDialog");
-            dismiss();
-        });
+            view.findViewById(R.id.detail_sell_btn).setOnClickListener(v -> {
+                BuySellDialogFragment dialog = BuySellDialogFragment.newInstance(stockModel.getStocks_name(), stockModel.getStocks_price(), stockModel.getDaily_change(), "SELL", parseDoubleSafe(stockModel.getStocks_quantity()));
+                dialog.show(getParentFragmentManager(), "BuySellDialog");
+                dismiss();
+            });
+        }
     }
 
     private void setupChart() {
+        if (chartsView == null) return;
         // Main Price Series
         CandlestickSeriesOptions candleOptions = new CandlestickSeriesOptions();
         candleOptions.setScaleMargins(new PriceScaleMargins(0.1f, 0.3f));
@@ -153,12 +156,14 @@ public class PositionDetailDialogFragment extends BottomSheetDialogFragment {
     }
 
     private void fetchChartData() {
+        if (getContext() == null || stockModel == null) return;
         // Step 1: Fetch 12mo for background history and EMAs
         YahooStockDataFeatch.fetchStockData(getContext(), stockModel.getStocks_name(), "1d", "12mo", new YahooStockDataFeatch.StockDataCallback() {
             @Override
             public void onSuccess(String symbol, ArrayList<OHLC_Model> ohlcList, String percent, String change) {
-                if (getActivity() == null) return;
+                if (getActivity() == null || !isAdded()) return;
                 getActivity().runOnUiThread(() -> {
+                    if (!isAdded()) return;
                     chartDataCache.clear();
                     chartDataCache.addAll(ohlcList);
                     updateChartNative(chartDataCache);
@@ -174,11 +179,13 @@ public class PositionDetailDialogFragment extends BottomSheetDialogFragment {
     }
 
     private void fetchAccurateLabels() {
+        if (getContext() == null || stockModel == null) return;
         YahooStockDataFeatch.fetchStockData(getContext(), stockModel.getStocks_name(), "1d", "2d", new YahooStockDataFeatch.StockDataCallback() {
             @Override
             public void onSuccess(String symbol, ArrayList<OHLC_Model> ohlcList, String percent, String change) {
-                if (getActivity() == null) return;
+                if (getActivity() == null || !isAdded()) return;
                 getActivity().runOnUiThread(() -> {
+                    if (!isAdded()) return;
                     // Update header with accurate real-time stats from 2d call
                     if (priceTxt != null && !ohlcList.isEmpty()) {
                         priceTxt.setText(ohlcList.get(ohlcList.size()-1).getClose());
@@ -206,7 +213,7 @@ public class PositionDetailDialogFragment extends BottomSheetDialogFragment {
     }
 
     private void updateChartNative(ArrayList<OHLC_Model> ohlcList) {
-        if (ohlcList == null || ohlcList.isEmpty() || candlestickSeries == null) return;
+        if (ohlcList == null || ohlcList.isEmpty() || candlestickSeries == null || !isAdded()) return;
         
         List<CandlestickData> candleDataList = new ArrayList<>();
         List<HistogramData> volumeDataList = new ArrayList<>();

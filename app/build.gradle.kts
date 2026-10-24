@@ -47,8 +47,15 @@ dependencies {
     implementation("com.google.android.material:material:1.11.0")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation("androidx.activity:activity:1.8.0")
+
+    // firebase crash analytics dependency
     implementation("com.google.firebase:firebase-crashlytics:19.4.3")
-    implementation("com.google.firebase:firebase-auth:22.3.1")
+    // Firebase BoM manages compatible Firebase library versions
+    implementation(platform("com.google.firebase:firebase-bom:34.19.0"))
+
+    // Firebase Authentication: sign-in and ID tokens
+    implementation("com.google.firebase:firebase-auth")
+
     implementation("androidx.biometric:biometric:1.2.0-alpha05")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")

@@ -1,4 +1,4 @@
-package com.example.bottonnavigation_and_recyclerview_implement_homepage;
+package com.example.bottonnavigation_and_recyclerview_implement_homepage.chart;
 
 import android.content.Context;
 import android.graphics.Canvas;

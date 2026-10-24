@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".fragment_ButtomNavigation.odders"
+    tools:context=".fragment.fragment_ButtomNavigation.odders"
     android:background="#F3F1F1">
 
     <androidx.cardview.widget.CardView

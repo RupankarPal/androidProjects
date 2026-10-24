@@ -72,11 +72,12 @@ public class loginPage extends AppCompatActivity {
                             android.util.Log.i("AuthDebug", "Firebase Login Success for: " + email + ". Generating OTP...");
                             // Step 2: Generate and send DETERMINISTIC OTP
                             String otp = otp_generater.otpgenerater(loginPage.this);
-                            EmailHelper emailHelper = new EmailHelper();
-                            emailHelper.sendEmail(email, "OTP Verification For DTrade", "Your OTP is: " + otp, new EmailHelper.EmailCallback() {
+                            EmailHelper emailHelper = new EmailHelper(loginPage.this);
+                            emailHelper.sendEmail(email, otp, new EmailHelper.EmailCallback() {
                                 @Override
-                                public void onSuccess() {
+                                public void onSuccess(String response) {
                                     android.util.Log.i("AuthDebug", "OTP Generated & Logged. Opening verification window.");
+                                    Toast.makeText(loginPage.this, response, Toast.LENGTH_SHORT).show();
                                     Intent intent = new Intent(loginPage.this, OtpVerificationActivity.class);
                                     intent.putExtra("email", email);
                                     intent.putExtra("mode", "LOGIN");

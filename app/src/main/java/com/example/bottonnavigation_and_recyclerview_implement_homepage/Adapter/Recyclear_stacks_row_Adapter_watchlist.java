@@ -1,7 +1,6 @@
 package com.example.bottonnavigation_and_recyclerview_implement_homepage.Adapter;
 
 import android.content.Context;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,9 +10,9 @@ import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.bottonnavigation_and_recyclerview_implement_homepage.ChartActivity;
+import com.example.bottonnavigation_and_recyclerview_implement_homepage.chart.ChartActivity;
 import android.content.Intent;
-import androidx.appcompat.app.AppCompatActivity;
+
 import com.example.bottonnavigation_and_recyclerview_implement_homepage.R;
 import com.example.bottonnavigation_and_recyclerview_implement_homepage.Model.stocks_row_Model;
 

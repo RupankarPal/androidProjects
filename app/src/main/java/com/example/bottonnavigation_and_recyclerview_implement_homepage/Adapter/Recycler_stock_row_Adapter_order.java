@@ -11,7 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.bottonnavigation_and_recyclerview_implement_homepage.Model.Order_model;
-import com.example.bottonnavigation_and_recyclerview_implement_homepage.OrderOptionsDialogFragment;
+import com.example.bottonnavigation_and_recyclerview_implement_homepage.fragment.fragment_dialog.OrderOptionsDialogFragment;
 import com.example.bottonnavigation_and_recyclerview_implement_homepage.R;
 import androidx.appcompat.app.AppCompatActivity;
 

@@ -1,4 +1,4 @@
-package com.example.bottonnavigation_and_recyclerview_implement_homepage.fragment_ButtomNavigation;
+package com.example.bottonnavigation_and_recyclerview_implement_homepage.fragment.fragment_ButtomNavigation;
 
 import android.content.Context;
 import android.os.Bundle;

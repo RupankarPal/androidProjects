@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.bottonnavigation_and_recyclerview_implement_homepage.Model.portfolio_stocks_model;
 import com.example.bottonnavigation_and_recyclerview_implement_homepage.R;
+import com.example.bottonnavigation_and_recyclerview_implement_homepage.fragment.fragment_dialog.PositionDetailDialogFragment;
 
 import java.util.ArrayList;
 import java.util.Locale;
@@ -71,8 +72,8 @@ public class PortfolioAdapter extends RecyclerView.Adapter<PortfolioAdapter.View
         // Click to open Detail Popup
         holder.itemView.setOnClickListener(v -> {
             if (context instanceof AppCompatActivity) {
-                com.example.bottonnavigation_and_recyclerview_implement_homepage.PositionDetailDialogFragment dialog = 
-                    com.example.bottonnavigation_and_recyclerview_implement_homepage.PositionDetailDialogFragment.newInstance(model);
+                PositionDetailDialogFragment dialog =
+                    PositionDetailDialogFragment.newInstance(model);
                 dialog.show(((AppCompatActivity) context).getSupportFragmentManager(), "PositionDetailDialog");
             }
         });
