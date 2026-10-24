@@ -65,18 +65,14 @@ public class loginPage extends AppCompatActivity {
                     Toast.makeText(loginPage.this, "Please fill in all the fields", Toast.LENGTH_SHORT).show();
                 } else {
                     login_btn.setEnabled(false);
-                    android.util.Log.i("AuthDebug", "Login clicked. Email: " + email);
                     
                     mAuth.signInWithEmailAndPassword(email, pass).addOnCompleteListener(task -> {
                         if (task.isSuccessful()) {
-                            android.util.Log.i("AuthDebug", "Firebase Login Success for: " + email + ". Generating OTP...");
-                            // Step 2: Generate and send DETERMINISTIC OTP
                             String otp = otp_generater.otpgenerater(loginPage.this);
                             EmailHelper emailHelper = new EmailHelper(loginPage.this);
                             emailHelper.sendEmail(email, otp, new EmailHelper.EmailCallback() {
                                 @Override
                                 public void onSuccess(String response) {
-                                    android.util.Log.i("AuthDebug", "OTP Generated & Logged. Opening verification window.");
                                     Toast.makeText(loginPage.this, response, Toast.LENGTH_SHORT).show();
                                     Intent intent = new Intent(loginPage.this, OtpVerificationActivity.class);
                                     intent.putExtra("email", email);
@@ -87,14 +83,12 @@ public class loginPage extends AppCompatActivity {
 
                                 @Override
                                 public void onFailure(Exception e) {
-                                    android.util.Log.e("AuthDebug", "OTP Generation Failed: " + e.getMessage());
                                     login_btn.setEnabled(true);
                                     Toast.makeText(loginPage.this, "Failed to send OTP: " + e.getMessage(), Toast.LENGTH_LONG).show();
                                 }
                             });
                         } else {
                             String error = task.getException() != null ? task.getException().getMessage() : "Unknown Firebase Error";
-                            android.util.Log.e("AuthDebug", "Login Failed (Firebase): " + error);
                             login_btn.setEnabled(true);
                             Toast.makeText(loginPage.this, "Login failed (Firebase): " + error, Toast.LENGTH_LONG).show();
                         }
